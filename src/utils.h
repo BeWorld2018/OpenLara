@@ -4,7 +4,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
-
+#if defined(_WIN32)
+#    define __ORDER_BIG_ENDIAN__ 4321
+#    define __ORDER_LITTLE_ENDIAN__ 1234
+#    define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
+#endif
 //#define TEST_SLOW_FIO
 
 #ifdef _DEBUG
@@ -2288,22 +2292,38 @@ public:
 
     inline uint16 readLE16() {
         uint16 x;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         return read(x);
+#else
+        return swap16(read(x));
+#endif
     }
 
     inline uint32 readLE32() {
         uint32 x;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         return read(x);
+#else
+        return swap32(read(x));
+#endif
     }
 
     inline uint16 readBE16() {
         uint16 x;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         return swap16(read(x));
+#else
+        return read(x);
+#endif
     }
 
     inline uint32 readBE32() {
         uint32 x;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         return swap32(read(x));
+#else
+        return read(x);
+#endif
     }
 
     inline uint64 read64() {
