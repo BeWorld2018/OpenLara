@@ -3179,11 +3179,8 @@ namespace TR {
 
             if (version == VER_UNKNOWN || version == VER_TR1_PC || version == VER_TR1_PSX || version == VER_TR1_SAT || version == VER_TR3_PSX) {
                 
-#ifdef __MORPHOS__
-				magic  = stream.readBE32();
-#else
-				stream.read(magic);	
-#endif
+                magic  = stream.readLE32();
+                printf("[%s][%d] magic=%d MAGIC_TR1_PC=%d pos:%d\n", __FUNCTION__, __LINE__, magic, MAGIC_TR1_PC, stream.pos);
                 if (magic != MAGIC_TR1_PC  &&
                     magic != MAGIC_TR1_SAT &&
                     magic != MAGIC_TR2_PC  &&
@@ -3192,11 +3189,7 @@ namespace TR {
                     magic != MAGIC_TR3_PC3 &&
                     magic != MAGIC_TR3_PSX &&
                     magic != MAGIC_TR4_PC) {
-#ifdef __MORPHOS__
-					magic  = stream.readBE32();
-#else
-					stream.read(magic);	
-#endif
+                    magic = stream.readLE32();
                 }
 
                 switch (magic) {
@@ -3324,38 +3317,52 @@ namespace TR {
         }
 
         void loadTR1_PC (Stream &stream) {
-#ifdef __MORPHOS__
-			tilesCount = stream.readBE32();
-            stream.read(tiles8, tilesCount);
-#else
-            stream.read(tiles8, stream.read(tilesCount));
-#endif
-            readDataArrays(stream);
-            readObjectTex(stream);
-            readSpriteTex(stream);
 
+            tilesCount = stream.readLE32();
+            stream.read(tiles8, tilesCount);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
+            readDataArrays(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
+            readObjectTex(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
+            readSpriteTex(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             if (isDemoLevel) {
                 stream.read(palette, 256);
             }
-
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readCameras(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readSoundSources(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readBoxes(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readOverlaps(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readZones(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readAnimTex(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readEntities(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readLightMap(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             
             if (!isDemoLevel) {
                 stream.read(palette, 256);
             }
 
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readCameraFrames(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readDemoData(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readSoundMap(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readSoundData(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             readSoundOffsets(stream);
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
         }
 
         void loadTR1_PSX (Stream &stream) {
@@ -3727,22 +3734,20 @@ namespace TR {
             if (version != VER_TR3_PSX) {
                 stream.seek(4);            
             }
-#ifdef __MORPHOS__
-			roomsCount = stream.readBE16();
+
+            roomsCount = stream.readLE16();
             rooms = roomsCount ? new Room[roomsCount] : NULL;
-#else
-            rooms = stream.read(roomsCount) ? new Room[roomsCount] : NULL;
-#endif
+			printf("[%s][%d] roomcount=%d\n", __FUNCTION__, __LINE__, roomsCount);
             for (int i = 0; i < roomsCount; i++) {
                 readRoom(stream, i);
             }
 
-#ifdef __MORPHOS__
-			floorsCount = stream.readBE32();
-            stream.read(floors, floorsCount);
-#else
-            stream.read(floors, stream.read(floorsCount));
-#endif
+			floorsCount = stream.readLE32();
+            printf("[%s][%d] floorsCount=%d pos:%d\n", __FUNCTION__, __LINE__, floorsCount, stream.pos);
+            floors = new FloorData[floorsCount];
+            for (int i = 0; i < floorsCount; i++)
+                floors[i].value = stream.readLE16();
+
             if (version == VER_TR3_PSX) {
                 // outside room offsets
                 stream.seek(27 * 27 * 2);
@@ -3754,86 +3759,100 @@ namespace TR {
                 stream.read(size);
                 stream.seek(8 * size);
             }
-#ifdef __MORPHOS__
-			meshDataSize = stream.readBE32();
-#else
-            stream.read(meshDataSize);
-#endif
-            stream.read(meshData, meshDataSize);
 
-			meshOffsetsCount = stream.readBE32();
-#else
-            stream.read(meshOffsetsCount);
-#endif
-            stream.read(meshOffsets, meshOffsetsCount);
+			meshDataSize = stream.readLE32();
+			printf("[%s][%d] meshDataSize=%d pos:%d\n", __FUNCTION__, __LINE__, meshDataSize, stream.pos);
+            //stream.read(meshData, meshDataSize);
+            meshData = meshDataSize ? new uint16[meshDataSize] : NULL;
+            stream.raw(meshData, sizeof(uint16) * meshDataSize);
+            
+			meshOffsetsCount = stream.readLE32();
+			printf("[%s][%d] meshOffsetsCount=%d pos:%d\n", __FUNCTION__, __LINE__, meshOffsetsCount, stream.pos);
+            //stream.read(meshOffsets, meshOffsetsCount);
+            meshOffsets = meshOffsetsCount ? new int32[meshOffsetsCount] : NULL;
+            for (int i = 0; i < meshOffsetsCount; i++)
+                meshOffsets[i] = stream.readLE32();
 
             readAnims(stream);
 
+            statesCount = stream.readLE32();
+            //stream.read(states, statesCount);
+            states = statesCount ? new AnimState[statesCount] : NULL;
+            for (int i = 0; i < statesCount; i++) {
+                AnimState& state = states[i];
+                state.state = stream.readLE16();
+                state.rangesCount = stream.readLE16();
+                state.rangesOffset = stream.readLE16();
+            }
 
-#ifdef __MORPHOS__
-            statesCount = stream.readBE32();
-#else
-            stream.read(statesCount);
-#endif
-            stream.read(states, statesCount);
-#ifdef __MORPHOS__
-            rangesCount = stream.readBE32();
-#else
-            stream.read(rangesCount);
-#endif
-            stream.read(ranges, rangesCount);
-#ifdef __MORPHOS__
-            commandsCount = stream.readBE32();
-#else
-            stream.read(commandsCount);
-#endif
-            stream.read(commands, commandsCount);
-#ifdef __MORPHOS__
-            nodesDataSize = stream.readBE32();
-#else
-            stream.read(nodesDataSize);
-#endif
-            stream.read(nodesData, nodesDataSize);
-#ifdef __MORPHOS__
-            frameDataSize = stream.readBE32();
-#else
-            stream.read(frameDataSize);
-#endif
-            stream.read(frameData, frameDataSize);
+            rangesCount = stream.readLE32();
+            // stream.read(ranges, rangesCount);
+            ranges = rangesCount ? new AnimRange[rangesCount] : NULL;
+            for (int i = 0; i < rangesCount; i++) {
+                AnimRange& range = ranges[i];
+                range.low = stream.readLE16();
+                range.high = stream.readLE16();
+                range.nextAnimation = stream.readLE16();
+                range.nextFrame = stream.readLE16();
+            }
+
+            commandsCount = stream.readLE32();
+            commands = commandsCount ? new int16[commandsCount] : NULL;
+            for (int i = 0; i < commandsCount; i++)
+                commands[i] = stream.readLE16();
+
+            nodesDataSize = stream.readLE32();
+            //stream.read(nodesData, nodesDataSize);
+            nodesData = nodesDataSize ? new uint32[nodesDataSize] : NULL;
+            for (int i = 0; i < nodesDataSize; i++)
+                nodesData[i] = stream.readLE32();
+
+            frameDataSize = stream.readLE32();
+            //stream.read(frameData, frameDataSize);
+            frameData = frameDataSize ? new uint16[frameDataSize] : NULL;
+            for (int i = 0; i < frameDataSize; i++)
+                frameData[i] = stream.readLE16();
 
             readModels(stream);
 
-#ifdef __MORPHOS__
-            staticMeshesCount = stream.readBE32();
-#else
-            stream.read(staticMeshesCount);
-#endif
-            stream.read(staticMeshes, staticMeshesCount);
+            staticMeshesCount = stream.readLE32();
+            printf("[%s][%d] staticMeshesCount=%d pos:%d\n", __FUNCTION__, __LINE__, staticMeshesCount, stream.pos);
+            //stream.read(staticMeshes, staticMeshesCount);
+            staticMeshes = staticMeshesCount ? new StaticMesh[staticMeshesCount] : NULL;
+            for (int i = 0; i < staticMeshesCount; i++) {
+                StaticMesh& mesh = staticMeshes[i];
+                mesh.id = stream.readLE32();
+                mesh.mesh = stream.readLE16();
+                mesh.vbox.minX = stream.readLE16();
+                mesh.vbox.maxX = stream.readLE16();
+                mesh.vbox.minY = stream.readLE16();
+                mesh.vbox.maxY = stream.readLE16();
+                mesh.vbox.minZ = stream.readLE16();
+                mesh.vbox.maxZ = stream.readLE16();
+                mesh.cbox.minX = stream.readLE16();
+                mesh.cbox.maxX = stream.readLE16();
+                mesh.cbox.minY = stream.readLE16();
+                mesh.cbox.maxY = stream.readLE16();
+                mesh.cbox.minZ = stream.readLE16();
+                mesh.cbox.maxZ = stream.readLE16();
+                mesh.flags = stream.readLE16();
+            }
         }
 
         void readAnims(Stream &stream) {
-#ifdef __MORPHOS__
-            animsCount = stream.readBE32();
-#else
-            stream.read(animsCount);
-#endif
+            animsCount = stream.readLE32();
+            printf("[%s][%d] animsCount=%d pos:%d\n", __FUNCTION__, __LINE__, animsCount, stream.pos);
             anims = animsCount ? new Animation[animsCount] : NULL;
             for (int i = 0; i < animsCount; i++) {
                 Animation &anim = anims[i];
-#ifdef __MORPHOS__
-                anim.frameOffset = stream.readBE32();
-#else
-                stream.read(anim.frameOffset);
-#endif
+                anim.frameOffset = stream.readLE32();
                 stream.read(anim.frameRate);
                 stream.read(anim.frameSize);
-#ifdef __MORPHOS__
-                anim.state = stream.readBE16();
-#else
-                stream.read(anim.state);
-#endif
+                anim.state = stream.readLE16();
                 stream.read(anim.speed);
+                printf("[%s][%d] anim.speed=%d L=%d H=%d - pos:%d\n", __FUNCTION__, __LINE__, anim.speed.value, anim.speed.H, anim.speed.L, stream.pos);
                 stream.read(anim.accel);
+                printf("[%s][%d] anim.accel=%d L=%d H=%d - pos:%d\n", __FUNCTION__, __LINE__, anim.accel.value, anim.accel.H, anim.accel.L, stream.pos);
                 if (version & (VER_TR4 | VER_TR5)) {
                     stream.read(anim.speedLateral);
                     stream.read(anim.accelLateral);
@@ -3841,60 +3860,36 @@ namespace TR {
                     anim.speedLateral.value = 0;
                     anim.accelLateral.value = 0;
                 }
-#ifdef __MORPHOS__
-                anim.frameStart = stream.readBE16();
-                anim.frameEnd = stream.readBE16();
-                anim.nextAnimation = stream.readBE16();
-                anim.nextFrame = stream.readBE16();
-                anim.scCount = stream.readBE16();
-                anim.scOffset = stream.readBE16();
-                anim.acCount = stream.readBE16();
-                anim.animCommand = stream.readBE16();
-#else
-                stream.read(anim.frameStart);
-                stream.read(anim.frameEnd);
-                stream.read(anim.nextAnimation);
-                stream.read(anim.nextFrame);
-                stream.read(anim.scCount);
-                stream.read(anim.scOffset);
-                stream.read(anim.acCount);
-                stream.read(anim.animCommand);
-#endif
+                anim.frameStart = stream.readLE16();
+                anim.frameEnd = stream.readLE16();
+                anim.nextAnimation = stream.readLE16();
+                anim.nextFrame = stream.readLE16();
+                anim.scCount = stream.readLE16();
+                anim.scOffset = stream.readLE16();
+                anim.acCount = stream.readLE16();
+                anim.animCommand = stream.readLE16();
             }
 
         }
 
         void readModels(Stream &stream) {
-#ifdef __MORPHOS__
-            modelsCount = stream.readBE32();
-#else
-            stream.read(modelsCount);
-#endif
+            modelsCount = stream.readLE32();
+            printf("[%s][%d] modelsCount=%d - pos:%d\n", __FUNCTION__, __LINE__, modelsCount, stream.pos);
             models = modelsCount ? new Model[modelsCount] : NULL;
             for (int i = 0; i < modelsCount; i++) {
                 Model &m = models[i];
                 uint16 type;
-#ifdef __MORPHOS__
-                type = stream.readBE16();
-#else
-                stream.read(type);
-#endif
+                type = stream.readLE16();
+                printf("[%s][%d] type=%d - pos:%d\n", __FUNCTION__, __LINE__, type, stream.pos);
                 m.type = Entity::Type(type);
                 stream.seek(sizeof(m.index));
                 m.index = i;
-#ifdef __MORPHOS__
-                m.mCount = stream.readBE16();
-                m.mStart = stream.readBE16();
-                m.node = stream.readBE32();
-                m.frame = stream.readBE32();
-                m.animation = stream.readBE16();
-#else
-                stream.read(m.mCount);
-                stream.read(m.mStart);
-                stream.read(m.node);
-                stream.read(m.frame);
-                stream.read(m.animation);
-#endif
+                m.mCount = stream.readLE16();
+                m.mStart = stream.readLE16();
+                m.node = stream.readLE32();
+                m.frame = stream.readLE32();
+                m.animation = stream.readLE16();
+                printf("[%s][%d] mCount=%d - pos:%d\n", __FUNCTION__, __LINE__, m.mCount, stream.pos);
                 if (version & VER_PSX) {
                     stream.seek(2);
                 }
@@ -3902,54 +3897,67 @@ namespace TR {
         }
 
         void readCameras(Stream &stream) {
-#ifdef __MORPHOS__
-            camerasCount = stream.readBE32();
-#else
-            stream.read(camerasCount);
-#endif
+            camerasCount = stream.readLE32();
             printf("[%s][%d] camerasCount=%d - pos:%d\n", __FUNCTION__, __LINE__, camerasCount, stream.pos);
-            stream.read(cameras, camerasCount);
+            cameras = camerasCount ? new Camera[camerasCount] : NULL;
+            for (int i = 0; i < camerasCount; i++) {
+                Camera& cam = cameras[i];
+                cam.x = stream.readLE32();
+                cam.y = stream.readLE32();
+                cam.z = stream.readLE32();
+                cam.room = stream.readLE16();
+                cam.flags.boxIndex = stream.readLE16();
+            }
         }
 
         void readFlybyCameras(Stream &stream) {
-#ifdef __MORPHOS__
-            flybyCamerasCount = stream.readBE32();
-#else
-            stream.read(flybyCamerasCount);
-#endif
-            stream.read(flybyCameras, flybyCamerasCount);
+            flybyCamerasCount = stream.readLE32();
+            printf("[%s][%d] flybyCamerasCount=%d - pos:%d\n", __FUNCTION__, __LINE__, flybyCamerasCount, stream.pos);
+            // stream.read(flybyCameras, stream.read(flybyCamerasCount));
+            flybyCameras = flybyCamerasCount ? new FlybyCamera[flybyCamerasCount] : NULL;
+            for (int i = 0; i < flybyCamerasCount; i++) {
+                FlybyCamera& f = flybyCameras[i];
+                f.x = stream.readLE32();
+                f.y = stream.readLE32();
+                f.z = stream.readLE32();
+                f.dx = stream.readLE32();
+                f.dy = stream.readLE32();
+                f.dz = stream.readLE32();
+                f.fov = stream.readLE16();
+                f.timer = stream.readLE16();
+                f.speed = stream.readLE16();
+                f.flags = stream.readLE16();
+                f.room = stream.readLE32();
+
+            }
         }
 
         void readSoundSources(Stream &stream) {
-#ifdef __MORPHOS__
-            soundSourcesCount = stream.readBE32();
-#else
-            stream.read(soundSourcesCount);
-#endif
-            stream.read(soundSources, soundSourcesCount);
+            //stream.read(soundSources, stream.read(soundSourcesCount));
+            soundSourcesCount = stream.readLE32();
+            printf("[%s][%d] soundSourcesCount=%d - pos:%d\n", __FUNCTION__, __LINE__, soundSourcesCount, stream.pos);
+            soundSources = soundSourcesCount ? new SoundSource[soundSourcesCount] : NULL;
+            for (int i = 0; i < soundSourcesCount; i++) {
+                SoundSource& s = soundSources[i];
+                s.x = stream.readLE32();
+                s.y = stream.readLE32();
+                s.z = stream.readLE32();
+                s.id = stream.readLE16();
+                s.flags = stream.readLE16();
+            }
         }
 
         void readBoxes(Stream &stream) {
-#ifdef __MORPHOS__
-            boxesCount = stream.readBE32();
-#else
-            stream.read(boxesCount);
-#endif
+            boxesCount = stream.readLE32();
+            printf("[%s][%d] boxesCount=%d - pos:%d\n", __FUNCTION__, __LINE__, boxesCount, stream.pos);
             boxes = boxesCount ? new Box[boxesCount] : NULL;
             for (int i = 0; i < boxesCount; i++) {
                 Box &b = boxes[i];
                 if (version & VER_TR1) {
-#ifdef __MORPHOS__
-                    b.minZ = stream.readBE32();
-                    b.maxZ = stream.readBE32();
-                    b.minX = stream.readBE32();
-                    b.maxX = stream.readBE32();
-#else
-                    stream.read(b.minZ);
-                    stream.read(b.maxZ);
-                    stream.read(b.minX);
-                    stream.read(b.maxX);
-#endif
+                    b.minZ = stream.readLE32();
+                    b.maxZ = stream.readLE32();
+                    b.minX = stream.readLE32();
+                    b.maxX = stream.readLE32();
                 }
                 
                 if (version & (VER_TR2 | VER_TR3 | VER_TR4 | VER_TR5)) {
@@ -3959,23 +3967,20 @@ namespace TR {
                     b.minX = stream.read(value) * 1024;
                     b.maxX = stream.read(value) * 1024;
                 }
-#ifdef __MORPHOS__
-                b.floor = stream.readBE16();
-                b.overlap.value = stream.readBE16();
-#else
-                stream.read(b.floor);
-                stream.read(b.overlap.value);
-#endif
+                b.floor = stream.readLE16();
+                b.overlap.value = stream.readLE16();
             }
         }
 
         void readOverlaps(Stream &stream) {
-#ifdef __MORPHOS__
-            overlapsCount = stream.readBE32();
-#else
-            stream.read(overlapsCount);
-#endif
-            stream.read(overlaps, overlapsCount);
+            //stream.read(overlaps, stream.read(overlapsCount));
+            overlapsCount = stream.readLE32();
+            printf("[%s][%d] overlapsCount=%d - pos:%d\n", __FUNCTION__, __LINE__, overlapsCount, stream.pos);
+            overlaps = overlapsCount ? new Overlap[overlapsCount] : NULL;
+            for (int i = 0; i < overlapsCount; i++) {
+                Overlap& s = overlaps[i];
+                s.value = stream.readLE16();
+            }
         }
 
         void readZones(Stream &stream) {
@@ -4001,57 +4006,60 @@ namespace TR {
         }
 
         void readCameraFrames(Stream &stream) {
-#ifdef __MORPHOS__
-            cameraFramesCount = stream.readBE16();
-#else
-            stream.read(cameraFramesCount);
-#endif
-            stream.read(cameraFrames, cameraFramesCount);
+            cameraFramesCount = stream.readLE16();
+            printf("[%s][%d] cameraFramesCount=%d - pos:%d\n", __FUNCTION__, __LINE__, cameraFramesCount, stream.pos);
+            //stream.read(cameraFrames, cameraFramesCount);
+            cameraFrames = new CameraFrame[cameraFramesCount];
+            for (int i = 0; i < cameraFramesCount; i++) {
+                cameraFrames[i].fov = stream.readLE16();
+                cameraFrames[i].pos.x = stream.readLE16();
+                cameraFrames[i].pos.y = stream.readLE16();
+                cameraFrames[i].pos.z = stream.readLE16();
+                cameraFrames[i].roll = stream.readLE16();
+                cameraFrames[i].target.x = stream.readLE16();
+                cameraFrames[i].target.y = stream.readLE16();
+                cameraFrames[i].target.z = stream.readLE16();
+            }
         }
 
         void readAIObjects(Stream &stream) {
-#ifdef __MORPHOS__
-            AIObjectsCount = stream.readBE32();
-#else
-            stream.read(AIObjectsCount);
-#endif
-            stream.read(AIObjects, AIObjectsCount);
+            stream.read(AIObjects, stream.read(AIObjectsCount));
+            AIObjectsCount = stream.readLE32();
+            printf("[%s][%d] AIObjectsCount=%d - pos:%d\n", __FUNCTION__, __LINE__, AIObjectsCount, stream.pos);
+            AIObjects = AIObjectsCount ? new AIObject[AIObjectsCount] : NULL;
+            for (int i = 0; i < AIObjectsCount; i++) {
+                AIObject& s = AIObjects[i];
+                s.type = stream.readLE16();
+                s.room = stream.readLE16();
+                s.x = stream.readLE32();
+                s.y = stream.readLE32();
+                s.z = stream.readLE32();
+                s.OCB = stream.readLE16();
+                s.flags = stream.readLE16();
+                s.angle = stream.readLE32();
+            }
         }
 
         void readDemoData(Stream &stream) {
-#ifdef __MORPHOS__
-            demoDataSize = stream.readBE16();
-#else
-            stream.read(demoDataSize);
-#endif
+            demoDataSize = stream.readLE16();
+            printf("[%s][%d] demoDataSize=%d - pos:%d\n", __FUNCTION__, __LINE__, demoDataSize, stream.pos);
             stream.read(demoData, demoDataSize);
+            //stream.read(demoData, stream.read(demoDataSize));
         }
 
         void readSoundMap(Stream &stream) {
             soundsCount = (version & VER_TR1) ? 256 : 370;
             stream.read(soundsMap, soundsCount);
-#ifdef __MORPHOS__
-            soundsInfoCount = stream.readBE32();
-#else
-            stream.read(soundsInfoCount);
-#endif
+            soundsInfoCount = stream.readLE32();
+            printf("[%s][%d] soundsInfoCount=%d - pos:%d\n", __FUNCTION__, __LINE__, soundsInfoCount, stream.pos);
             soundsInfo = (soundsInfoCount > 0) ? new SoundInfo[soundsInfoCount] : NULL;
             for (int i = 0; i < soundsInfoCount; i++) {
                 SoundInfo &s = soundsInfo[i];
-#ifdef __MORPHOS__
-                s.index = stream.readBE16();
-#else
-                stream.read(s.index);
-#endif
+                s.index = stream.readLE16();
                 if (version & (VER_TR1 | VER_TR2)) {
                     uint16 v;
-#ifdef __MORPHOS__
-                    v = stream.readBE16(); s.volume = float(v) / 0x7FFF;
-                    v = stream.readBE16(); s.chance = float(v) / 0xFFFF;
-#else
-                    stream.read(v); s.volume = float(v) / 0x7FFF;
-                    stream.read(v); s.chance = float(v) / 0xFFFF;
-#endif
+                    v = stream.readLE16(); s.volume = float(v) / 0x7FFF;
+                    v = stream.readLE16(); s.chance = float(v) / 0xFFFF;
                     s.range = 8 * 1024;
                     s.pitch = 0.2f;
                 } else {
@@ -4061,32 +4069,24 @@ namespace TR {
                     stream.read(v); s.chance = float(v) / 0xFF;
                     stream.read(v); s.pitch  = float(v) / 0xFF;
                 }
-#ifdef __MORPHOS__
-                s.flags.value = stream.readBE16();
-#else
-                stream.read(s.flags.value);
-#endif
+                s.flags.value = stream.readLE16();
 
                 ASSERT(s.volume <= 1.0f);
             }
         }
 
         void readSoundData(Stream &stream) {
-#ifdef __MORPHOS__
-            soundDataSize = stream.readBE32();
-#else
-            stream.read(soundDataSize);
-#endif
+            soundDataSize = stream.readLE32();
+            printf("[%s][%d] soundDataSize=%d - pos:%d\n", __FUNCTION__, __LINE__, soundDataSize, stream.pos);
             soundDataSize > 0 ? stream.read(soundData, soundDataSize) : NULL;
+            //stream.read(soundDataSize) > 0 ? stream.read(soundData, soundDataSize) : NULL;
         }
 
         void readSoundOffsets(Stream &stream) {
-#ifdef __MORPHOS__
-            soundOffsetsCount = stream.readBE32();
-#else
-            stream.read(soundOffsetsCount);
-#endif
+            soundDataSize = stream.readLE32();
+            printf("[%s][%d] soundDataSize=%d - pos:%d\n", __FUNCTION__, __LINE__, soundDataSize, stream.pos);
             soundOffsetsCount > 0 ? stream.read(soundOffsets, soundOffsetsCount) : NULL;
+            // stream.read(soundOffsetsCount) > 0 ? stream.read(soundOffsets, soundOffsetsCount) : NULL;
         }
 
         #define CHUNK(str) ((uint64)((const char*)(str))[0]        | ((uint64)((const char*)(str))[1] << 8)  | ((uint64)((const char*)(str))[2] << 16) | ((uint64)((const char*)(str))[3] << 24) | \
@@ -4878,6 +4878,7 @@ namespace TR {
         }
 
         void prepare() {
+            printf("prepare()\n");
             if (version == VER_TR1_PC) {
             // DOS 6-bit -> 8-bit per component
                 ASSERT(palette);
@@ -4889,7 +4890,7 @@ namespace TR {
                     c++;
                 }
             }
-
+            printf("[%s][%d] modelsCount=%d\n", __FUNCTION__, __LINE__, modelsCount);
             for (int i = 0; i < modelsCount; i++) {
                 Model &model = models[i];
                 model.type = Entity::remap(version, model.type);
@@ -4902,7 +4903,7 @@ namespace TR {
             for (int i = 0; i < staticMeshesCount; i++) {
                 initMesh(staticMeshes[i].mesh);
             }
-
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             remapMeshOffsetsToIndices();
 
             delete[] meshData;
@@ -4989,6 +4990,7 @@ namespace TR {
         }
 
         void readSamples(Stream &stream) {
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             stream.read(soundData, soundDataSize = stream.size);
 
             int32 dataOffsets[512];
@@ -5007,6 +5009,7 @@ namespace TR {
         }
 
         static void sfxLoadAsync(Stream *stream, void *userData) {
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             if (!stream) {
                 LOG("! can't load MAIN.SFX\n");
                 return;
@@ -5017,6 +5020,7 @@ namespace TR {
 
 
         void initExtra() {
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
         // get special models indices
             memset(&extra, 0xFF, sizeof(extra));
 
@@ -5098,6 +5102,7 @@ namespace TR {
         }
 
         void initCutscene() {
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             if (id == LVL_TR3_CUT_2 || id == LVL_TR3_CUT_6)
                 cutEntity = 1; // TODO TR3
         // init cutscene transform
@@ -5127,6 +5132,7 @@ namespace TR {
         }
 
         void initTextureTypes() {
+            printf("[%s][%d]\n", __FUNCTION__, __LINE__);
             // rooms geometry
             for (int roomIndex = 0; roomIndex < roomsCount; roomIndex++) {
                 Room       &room = rooms[roomIndex];
@@ -5269,32 +5275,20 @@ namespace TR {
         }
 
         void readFace(Stream &stream, Face &f, bool colored, bool triangle, bool isRoomMesh) {
+			printf("[%s][%d] pos:%d\n", __FUNCTION__, __LINE__, stream.pos);
             f.triangle = triangle;
 
             for (int i = 0; i < (triangle ? 3 : 4); i++) {
-#ifdef __MORPHOS__
-                f.vertices[i] = stream.readBE16();
-#else
-                stream.read(f.vertices[i]);
-#endif				
+                f.vertices[i] = stream.readLE16();		
             }
 
             if (triangle) {
                 f.vertices[3] = 0;
             }
 
-#ifdef __MORPHOS__
-			f.flags.value = stream.readBE16();
-#else
-            stream.read(f.flags.value);
-#endif
-
+			f.flags.value = stream.readLE16();
             if (!isRoomMesh && (version & (VER_TR4 | VER_TR5))) {
-#ifdef __MORPHOS__
-				f.effects.value = stream.readBE16();
-#else
-                stream.read(f.effects.value);
-#endif
+				f.effects.value = stream.readLE16();
             }
 
             f.colored = colored;
@@ -5304,21 +5298,15 @@ namespace TR {
             Room &r = rooms[roomIndex];
             Room::Data &d = r.data;
         // room info
-#ifdef __MORPHOS__
-            r.info.x = stream.readBE32();
-            r.info.z = stream.readBE32();
-            r.info.yBottom = stream.readBE32();
-            r.info.yTop = stream.readBE32();
-#else
-            stream.read(r.info);
-#endif
-
+            r.info.x = stream.readLE32();
+            r.info.z = stream.readLE32();
+            r.info.yBottom = stream.readLE32();
+            r.info.yTop = stream.readLE32();
+			printf("[%s][%d] info x=%d z=%d pos:%d\n", __FUNCTION__, __LINE__, r.info.x, r.info.z, stream.pos);
         // room data
-#ifdef __MORPHOS__
-            d.size = stream.readBE32();
-#else
-            stream.read(d.size);
-#endif
+            d.size = stream.readLE32();
+            printf("[%s][%d] d.size:%d\n", __FUNCTION__, __LINE__, d.size);
+
             int startOffset = stream.pos;
             if (version == VER_TR1_PSX) {
                 stream.seek(2);
@@ -5369,11 +5357,8 @@ namespace TR {
 
                 d.vCount = d.fCount = 0;
             } else {
-#ifdef __MORPHOS__
-                d.vCount = stream.readBE16();
-#else
-                stream.read(d.vCount);
-#endif
+                d.vCount = stream.readLE16();
+				printf("[%s][%d] d.vCount=%d\n", __FUNCTION__, __LINE__, d.vCount );
                 d.vertices = d.vCount ? new Room::Data::Vertex[d.vCount] : NULL;
             }
 
@@ -5488,37 +5473,23 @@ namespace TR {
 
                         lighting = 0x1FFF - (lighting << 5); // TODO: calc lighting by lighting = [0..255] and mode = [0..31] values
                     } else {
-#ifdef __MORPHOS__
-                        v.pos.x = stream.readBE16();
-						v.pos.y = stream.readBE16();
-						v.pos.z = stream.readBE16();
-						lighting = stream.readBE16();
-#else
-                        stream.read(v.pos.x);
-                        stream.read(v.pos.y);
-                        stream.read(v.pos.z);
-                        stream.read(lighting);
-#endif
+                        v.pos.x = stream.readLE16();
+						v.pos.y = stream.readLE16();
+						v.pos.z = stream.readLE16();
+						lighting = stream.readLE16();
+                        printf("[%s][%d] v.pos.x=%d pos:%d\n", __FUNCTION__, __LINE__, v.pos.x, stream.pos);
                         if (version == VER_TR2_PC || version == VER_TR3_PC || version == VER_TR4_PC) {
-#ifdef __MORPHOS__
-							v.attributes = stream.readBE16();
-#else
-                            stream.read(v.attributes);
-#endif
+							v.attributes = stream.readLE16();
                         }
 
                         if (version == VER_TR2_PC) {
-#ifdef __MORPHOS__
-							lighting = stream.readBE16(); // real lighting value
-#else
-                            stream.read(lighting); // real lighting value
-#endif
+							lighting = stream.readLE16(); // real lighting value
                         }
 
                         if (version == VER_TR3_PC || version == VER_TR4_PC) {
-                            Color16 color;
-                            stream.read(color.value);
-                            v.color = color;
+                            //Color16 color;
+                            //stream.read(color.value);
+                            v.color = Color16(stream.readLE16());
                         }
                     }
 
@@ -5538,25 +5509,19 @@ namespace TR {
                 }
 
                 int tmp = stream.pos;
+				printf("[%s][%d] pos:%d\n", __FUNCTION__, __LINE__, tmp);
                 if (version == VER_TR2_PSX) {
                     stream.read(d.rCount);
                     stream.seek(sizeof(uint16) * d.rCount);
                     if ((stream.pos - startOffset) % 4) stream.seek(2);
                     stream.seek(sizeof(uint16) * 4 * d.rCount);
                 } else {
-#ifdef __MORPHOS__
-					d.rCount = stream.readBE16();
+					d.rCount = stream.readLE16();
                     stream.seek(d.rCount * FACE4_SIZE); // uint32 colored (not existing in file)
-#else
-                    stream.seek(stream.read(d.rCount)* FACE4_SIZE); // uint32 colored (not existing in file)
-#endif
                 }
                 
-#ifdef __MORPHOS__
-				d.tCount = stream.readBE16();
-#else
-                stream.read(d.tCount);
-#endif
+				d.tCount = stream.readLE16();
+                printf("[%s][%d] d.tCount=%d pos:%d\n", __FUNCTION__, __LINE__, d.tCount, stream.pos);
                 stream.setPos(tmp);
 
                 d.fCount = d.rCount + d.tCount;
@@ -5564,15 +5529,11 @@ namespace TR {
 
                 int idx = 0;
 
-#ifdef __MORPHOS__
-                int16 tmpCount = stream.readBE16();
-#else
-                int16 tmpCount;
-                stream.read(tmpCount);
-#endif
+                int16 tmpCount = stream.readLE16();
+				printf("[%s][%d] tmpCount:%d d.rCount:%d\n", __FUNCTION__, __LINE__, tmpCount, d.rCount);
                 ASSERT(tmpCount == d.rCount);
 
-                if (version == VER_TR2_PSX) {
+               if (version == VER_TR2_PSX) {
                     for (int i = 0; i < d.rCount; i++)
                         stream.raw(&d.faces[i].flags.value, sizeof(uint16));
                     
@@ -5593,14 +5554,12 @@ namespace TR {
                         readFace(stream, d.faces[idx++], false, false, true);
                     }
                 }
-#ifdef __MORHOS__
-                tmpCount = stream.readBE16();
-#else
-                stream.read(tmpCount);
-#endif
+
+                tmpCount = stream.readLE16();
+				printf("[%s][%d] tmpCount=%d d.tCount=%d pos:%d\n", __FUNCTION__, __LINE__, tmpCount, d.tCount, stream.pos);
                 ASSERT(tmpCount == d.tCount);
 
-                if (version == VER_TR2_PSX) {
+               if (version == VER_TR2_PSX) {
                     stream.seek(2);
                     for (int i = 0; i < d.tCount; i++) {
                         Face &f = d.faces[d.rCount + i];
@@ -5614,6 +5573,7 @@ namespace TR {
                     }
                 } else {
                     for (int i = 0; i < d.tCount; i++) {
+						//printf("[%s][%d] goto readFace  pos:%d\n", __FUNCTION__, __LINE__, stream.pos);
                         readFace(stream, d.faces[idx++], false, true, true);
                     }
                 }
@@ -5628,48 +5588,56 @@ namespace TR {
             }
 
         // room sprites
+			printf("[%s][%d] pos:%d\n", __FUNCTION__, __LINE__, stream.pos);
             if (version == VER_TR2_PSX || version == VER_TR3_PSX) { // there is no room sprites
                 d.sprites = NULL;
                 d.sCount  = 0;
             } else {
-#ifdef __MORPHOS__
-                d.sCount = stream.readBE16();
+
+                d.sCount = stream.readLE16();
                 printf("[%s][%d] d.sCount=%d\n", __FUNCTION__, __LINE__, d.sCount);
+                d.sprites = new Room::Data::Sprite[d.sCount];
                 for (int j = 0; j < d.sCount; j++) {
-                    d.sprites[j].vertexIndex = stream.readBE16();
-                    d.sprites[j].texture = stream.readBE16();
+                    d.sprites[j].vertexIndex = (stream.readLE16() >> 4);
+                    printf("[%s][%d] d.sprites[%d].vertexIndex =%d\n", __FUNCTION__, __LINE__, j, d.sprites[j].vertexIndex);
+                    d.sprites[j].texture = (stream.readLE16() >> 4);
+                    printf("[%s][%d] d.sprites[%d].texture=%d\n", __FUNCTION__, __LINE__, j, d.sprites[j].texture);
                 }
-#else
-                stream.read(d.sprites, stream.read(d.sCount));
-#endif
+                //stream.read(d.sprites, stream.read(d.sCount));
             }
 
             if (version == VER_TR3_PSX && partsCount != 0) {
                 stream.seek(4); // skip unknown shit
             }
-
+            printf("[%s][%d] d.stream.pos - startOffset=%d int(d.size * 2) =%d\n", __FUNCTION__, __LINE__, (stream.pos - startOffset), (int(d.size * 2)));
             ASSERT(int(d.size * 2) >= stream.pos - startOffset);
             stream.setPos(startOffset + d.size * 2);
 
         // portals
-#ifdef __MORPHOS__
-			r.portalsCount = stream.readBE16();
+			r.portalsCount = stream.readLE16();
+            printf("[%s][%d] portalsCount=%d pos:%d\n", __FUNCTION__, __LINE__, r.portalsCount, stream.pos);
+            //stream.read(r.portals, r.portalsCount);
+            r.portals = new Room::Portal[r.portalsCount];
             for (int j = 0; j < r.portalsCount; j++) {
                 Room::Portal& p = r.portals[j];
-                p.roomIndex = stream.readBE16();
-                p.normal.x = stream.readBE16();
-                p.normal.y = stream.readBE16();
-                p.normal.z = stream.readBE16();
+                p.roomIndex = stream.readLE16();
+                p.normal.x = stream.readLE16();
+                p.normal.y = stream.readLE16();
+                p.normal.z = stream.readLE16();
+                printf("[%s][%d] p.roomIndex=%d\n", __FUNCTION__, __LINE__, p.roomIndex);
+                printf("[%s][%d] p.normal.x=%d\n", __FUNCTION__, __LINE__, p.normal.x);
+                printf("[%s][%d] p.normal.y=%d\n", __FUNCTION__, __LINE__, p.normal.y);
+                printf("[%s][%d] p.normal.z=%d\n", __FUNCTION__, __LINE__, p.normal.z);
                 for (int k = 0; k < 4; k++) {
-                    p.vertices[k].x = stream.readBE16();
-                    p.vertices[k].y = stream.readBE16();
-                    p.vertices[k].z = stream.readBE16();
+                    p.vertices[k].x = stream.readLE16();
+                    p.vertices[k].y = stream.readLE16();
+                    p.vertices[k].z = stream.readLE16();
+                    printf("[%s][%d] p.vertices[%d].x=%d \n", __FUNCTION__, __LINE__, k, p.vertices[k].x);
+                    printf("[%s][%d] p.vertices[%d].y=%d \n", __FUNCTION__, __LINE__, k, p.vertices[k].y);
+                    printf("[%s][%d] p.vertices[%d].z=%d \n", __FUNCTION__, __LINE__, k, p.vertices[k].z);
                 }
             }
-#else
-            stream.read(r.portals, stream.read(r.portalsCount));
-#endif
-			
+
             if (version == VER_TR2_PSX || version == VER_TR3_PSX) {
                 for (int i = 0; i < r.portalsCount; i++) {
                     r.portals[i].vertices[0].y += r.info.yTop;
@@ -5680,24 +5648,15 @@ namespace TR {
             }
 
         // sectors
-#ifdef __MORPHOS__
-            r.zSectors = stream.readBE16();
-            r.xSectors = stream.readBE16();
-#else
-            stream.read(r.zSectors);
-            stream.read(r.xSectors);
-#endif
+            r.zSectors = stream.readLE16();
+            r.xSectors = stream.readLE16();
             r.sectors = (r.zSectors * r.xSectors > 0) ? new Room::Sector[r.zSectors * r.xSectors] : NULL;		
-
+			printf("[%s][%d] sector=%d pos:%d\n", __FUNCTION__, __LINE__, (r.zSectors * r.xSectors), stream.pos);
             for (int i = 0; i < r.zSectors * r.xSectors; i++) {
                 Room::Sector &s = r.sectors[i];
-#ifdef __MORPHOS__
-                s.floorIndex = stream.readBE16();
-                s.boxIndex   = stream.readBE16();
-#else
-                stream.read(s.floorIndex);
-                stream.read(s.boxIndex);
-#endif
+                s.floorIndex = stream.readLE16();
+                s.boxIndex   = stream.readLE16();
+                printf("[%s][%d] s.floorIndex %d pos:%d\n", __FUNCTION__, __LINE__, s.floorIndex, stream.pos);
                 stream.read(s.roomBelow);
                 stream.read(s.floor);
                 stream.read(s.roomAbove);
@@ -5715,54 +5674,29 @@ namespace TR {
             }
 
         // ambient light luminance
-#ifdef __MORPHOS__
-            r.ambient = stream.readBE16();
-#else
-            stream.read(r.ambient);
-#endif
+            r.ambient = stream.readLE16();
+			printf("[%s][%d] r.ambient=%d pos:%d\n", __FUNCTION__, __LINE__, r.ambient, stream.pos);
             if (version != VER_TR3_PSX) {
                 if (version & (VER_TR2 | VER_TR3 | VER_TR4))
-#ifdef __MORPHOS__
-                    r.ambient2 = stream.readBE16();//
-#else
-                    stream.read(r.ambient2);
-#endif
+                    r.ambient2 = stream.readLE16();
 
                 if (version & VER_TR2)
-#ifdef __MORPHOS__
-                    r.lightMode = stream.readBE16();
-#else
-                    stream.read(r.lightMode);
-#endif
+                    r.lightMode = stream.readLE16();
                    
             } else {
                 r.ambient = 0x1FFF - r.ambient;
-#ifdef __MORPHOS__
-                r.ambient2 = stream.readBE16();
-#else
-                stream.read(r.ambient2);
-#endif
+                r.ambient2 = stream.readLE16();
             }
 
         // lights
-#ifdef __MORPHOS__
-            r.lightsCount = stream.readBE16();
-#else
-            stream.read(r.lightsCount);
-#endif
+            r.lightsCount = stream.readLE16();
+			printf("[%s][%d] r.lightsCount=%d pos:%d\n", __FUNCTION__, __LINE__, r.lightsCount, stream.pos);
             r.lights = r.lightsCount ? new Room::Light[r.lightsCount] : NULL;
             for (int i = 0; i < r.lightsCount; i++) {
                 Room::Light &light = r.lights[i];
-#ifdef __MORPHOS__
-                light.x = stream.readBE32();
-                light.y = stream.readBE32();
-                light.z = stream.readBE32();
-#else
-                stream.read(light.x);
-                stream.read(light.y);
-                stream.read(light.z);
-#endif	
-
+                light.x = stream.readLE32();
+                light.y = stream.readLE32();
+                light.z = stream.readLE32();
                 uint16 intensity;
 
                 if (version & (VER_TR3 | VER_TR4)) {
@@ -5783,11 +5717,7 @@ namespace TR {
                     stream.read(light.dir);
                     light.radius = uint32(light.length);
                 } else {
-#ifdef __MORPHOS__
-                    intensity = stream.readBE16();
-#else
-                    stream.read(intensity);
-#endif
+                    intensity = stream.readLE16();
                 }
 
                 if (version == VER_TR1_PSX) {
@@ -5799,11 +5729,7 @@ namespace TR {
                 }
 
                 if (version != VER_TR4_PC) {
-#ifdef __MORPHOS__
-					light.radius = stream.readBE32();
-#else
-                    stream.read(light.radius);
-#endif
+					light.radius = stream.readLE32();
                 }
 
                 if (version & VER_TR2) {
@@ -5824,33 +5750,19 @@ namespace TR {
                 light.radius *= 2;
             }
         // meshes
-#ifdef __MORPHOS__
-            r.meshesCount = stream.readBE16();
-#else
-            stream.read(r.meshesCount);
-#endif
+            r.meshesCount = stream.readLE16();
+            printf("[%s][%d] r.meshesCount=%d pos:%d\n", __FUNCTION__, __LINE__, r.meshesCount, stream.pos);
             r.meshes = r.meshesCount ? new Room::Mesh[r.meshesCount] : NULL;
             for (int i = 0; i < r.meshesCount; i++) {
                 Room::Mesh &m = r.meshes[i];
-#ifdef __MORPHOS__
-                m.z = stream.readBE32();
-                m.z = stream.readBE32();
-                m.z = stream.readBE32();
-                m.rotation.value = stream.readBE16();
-#else
-                stream.read(m.x);
-                stream.read(m.y);
-                stream.read(m.z);
-                stream.read(m.rotation.value);
-#endif
+                m.z = stream.readLE32();
+                m.y = stream.readLE32();
+                m.z = stream.readLE32();
+                m.rotation.value = stream.readLE16();
 
                 if (version & (VER_TR3 | VER_TR4)) {
                     Color16 color;
-#ifdef __MORPHOS__
-                    color.value = stream.readBE16();
-#else
-                    stream.read(color.value);
-#endif
+                    color.value = stream.readLE16();
                     m.color = color;
                     stream.seek(2);
                 } else {
@@ -5859,11 +5771,7 @@ namespace TR {
                     }
 
                     uint16 intensity;
-#ifdef __MORPHOS__
-                    intensity = stream.readBE16();
-#else
-                    stream.read(intensity);
-#endif
+                    intensity = stream.readLE16();
                     if ((version & VER_VERSION) < VER_TR3) {
                         int value = clamp((intensity > 0x1FFF) ? 255 : (255 - (intensity >> 5)), 0, 255);
                         m.color.r = m.color.g = m.color.b = value;
@@ -5871,25 +5779,16 @@ namespace TR {
                     }
                 }
 
-#ifdef __MORPHOS__
-                m.meshID = stream.readBE16();
-                
-#else
-                stream.read(m.meshID);
-#endif
+                m.meshID = stream.readLE16();
                 if (version == VER_TR1_PSX) {
                     stream.seek(2); // skip padding
                 }
             }
 
         // misc flags
-#ifdef __MORPHOS__
-            r.alternateRoom = stream.readBE16();
-            r.flags.value = stream.readBE16();
-#else
-            stream.read(r.alternateRoom);
-            stream.read(r.flags.value);	
-#endif
+            r.alternateRoom = stream.readLE16();
+            r.flags.value = stream.readLE16();
+            printf("[%s][%d] r.alternateRoom=%d pos:%d\n", __FUNCTION__, __LINE__, r.alternateRoom, stream.pos);
             if (version & (VER_TR3 | VER_TR4)) {
                 stream.read(r.waterScheme);
                 stream.read(r.reverbType);
@@ -5908,7 +5807,7 @@ namespace TR {
             }
 
             Stream stream(NULL, &meshData[offset / 2], 1024 * 1024);
-
+            printf("[%s][%d] pos:%d\n", __FUNCTION__, __LINE__, stream.pos);
             Mesh &mesh = meshes[meshesCount++];
             mesh.offset = offset;
 
@@ -5924,15 +5823,10 @@ namespace TR {
                 stream.read(mesh.vCount);
                 stream.read(mesh.rCount);
             } else {
-#ifdef __MORPHOS__
-                mesh.center.x = stream.readBE16();
-                mesh.center.y = stream.readBE16();
-                mesh.center.z = stream.readBE16();
-                mesh.radius = stream.readBE16();
-#else
-                stream.read(mesh.center);
-                stream.read(mesh.radius);
-#endif
+                mesh.center.x = stream.readLE16();
+                mesh.center.y = stream.readLE16();
+                mesh.center.z = stream.readLE16();
+                mesh.radius = stream.readLE16();
                 if (version == VER_TR3_PSX) {
                     uint8  tmp;
                     uint16 tmpOffset;
@@ -5941,13 +5835,8 @@ namespace TR {
                     stream.read(tmpOffset);
                     fOffset          = stream.pos + tmpOffset;
                 } else {
-#ifdef __MORPHOS__
-                    mesh.flags.value = stream.readBE16();
-                    mesh.vCount = stream.readBE16();
-#else
-                    stream.read(mesh.flags.value);
-                    stream.read(mesh.vCount);
-#endif
+                    mesh.flags.value = stream.readLE16();
+                    mesh.vCount = stream.readLE16();
                 }
 
                 if (version == VER_TR1_SAT) {
@@ -6121,44 +6010,24 @@ namespace TR {
                     mesh.vertices = new Mesh::Vertex[mesh.vCount];
                     for (int i = 0; i < mesh.vCount; i++) {
                         short4 &c = mesh.vertices[i].coord;
-#ifdef __MORPHOS__
-                        c.x = stream.readBE16();
-                        c.y = stream.readBE16();
-                        c.z = stream.readBE16();
-#else
-                        stream.read(c.x);
-                        stream.read(c.y);
-                        stream.read(c.z);
-#endif
+                        c.x = stream.readLE16();
+                        c.y = stream.readLE16();
+                        c.z = stream.readLE16();
                     }
                     int16 nCount;
-#ifdef __MORPHOS__
-                    nCount = stream.readBE16();
-#else
-                    stream.read(nCount);
-#endif
+                    nCount = stream.readLE16();
                     ASSERT(mesh.vCount == abs(nCount));
                     for (int i = 0; i < mesh.vCount; i++) {
                         short4 &c = mesh.vertices[i].coord;
                         short4 &n = mesh.vertices[i].normal;
                         if (nCount > 0) { // normal
-#ifdef __MORPHOS__
-                            n.x = stream.readBE16();
-                            n.y = stream.readBE16();
-                            n.z = stream.readBE16();
-#else
-                            stream.read(n.x);
-                            stream.read(n.y);
-                            stream.read(n.z);
-#endif
+                            n.x = stream.readLE16();
+                            n.y = stream.readLE16();
+                            n.z = stream.readLE16();
                             n.w = 1;
                             c.w = 0x1FFF;
                         } else { // intensity
-#ifdef __MORPHOS__
-                            c.w = stream.readBE16();
-#else
-                            stream.read(c.w);
-#endif
+                            c.w = stream.readLE16();
                             n = short4( 0, 0, 0, 0 );
                         }
                     }
@@ -6173,30 +6042,14 @@ namespace TR {
                     }
 
                     int tmp = stream.pos;
-#ifdef __MORPHOS__
-                    rCount = stream.readBE16();
-#else
-                    stream.read(rCount);
-#endif
+                    rCount = stream.readLE16();
                     stream.seek(rCount * faceSize4); // uint32 colored (not existing in file)
-#ifdef __MORPHOS__
-                    tCount = stream.readBE16();
-#else
-                    stream.read(tCount);
-#endif
+                    tCount = stream.readLE16();
                     stream.seek(tCount * faceSize3);
                     if (!(version & (VER_TR4 | VER_TR5))) {
-#ifdef __MORPHOS__
-                        crCount = stream.readBE16();
-#else
-                        stream.read(crCount);
-#endif
+                        crCount = stream.readLE16();
                         stream.seek(crCount * faceSize4);
-#ifdef __MORPHOS__
-                        ctCount = stream.readBE16();
-#else
-                        stream.read(ctCount);
-#endif
+                        ctCount = stream.readLE16();
                         stream.seek(ctCount * faceSize3);
                     }
                     stream.setPos(tmp);
@@ -6549,11 +6402,8 @@ namespace TR {
         }
 
         void readObjectTex(Stream &stream) {
-#ifdef __MORPHOS__
-            objectTexturesCount = stream.readBE32();
-#else
-            stream.read(objectTexturesCount);
-#endif
+            objectTexturesCount = stream.readLE32();
+            printf("[%s][%d] objectTexturesCount=%d pos:%d\n", __FUNCTION__, __LINE__, objectTexturesCount, stream.pos);
             objectTextures = objectTexturesCount ? new TextureInfo[objectTexturesCount] : NULL;
             for (int i = 0; i < objectTexturesCount; i++) {
                 readObjectTex(stream, objectTextures[i]);
@@ -6636,39 +6486,24 @@ namespace TR {
         }
 
         void readSpriteTex(Stream &stream) {
-#ifdef __MORPHOS__
-            spriteTexturesCount = stream.readBE32();
-#else
-            stream.read(spriteTexturesCount);
-#endif
+            spriteTexturesCount = stream.readLE32();
+            printf("[%s][%d] spriteTexturesCount=%d pos:%d\n", __FUNCTION__, __LINE__, spriteTexturesCount, stream.pos);
+
             spriteTextures = spriteTexturesCount ? new TextureInfo[spriteTexturesCount] : NULL;
             for (int i = 0; i < spriteTexturesCount; i++)
                 readSpriteTex(stream, spriteTextures[i]);
 
-#ifdef __MORPHOS__
-            spriteSequencesCount = stream.readBE32();
-#else
-            stream.read(spriteSequencesCount);
-#endif
+            spriteSequencesCount = stream.readLE32();
+            printf("[%s][%d] spriteSequencesCount=%d pos:%d\n", __FUNCTION__, __LINE__, spriteSequencesCount, stream.pos);
             spriteSequences = spriteSequencesCount ? new SpriteSequence[spriteSequencesCount] : NULL;
             for (int i = 0; i < spriteSequencesCount; i++) {
                 SpriteSequence &s = spriteSequences[i];
                 uint16 type;
-#ifdef __MORHPOS__
-                type = stream.readBE16();
-#else
-                stream.read(type);
-#endif
+                type = stream.readLE16();
                 s.type = Entity::remap(version, Entity::Type(type));
-#ifdef __MORHPOS__
-                s.unused = stream.readBE16();
-                s.sCount = stream.readBE16();
-                s.sStart = stream.readBE16();
-#else
-                stream.read(s.unused);
-                stream.read(s.sCount);
-                stream.read(s.sStart);
-#endif
+                s.unused = stream.readLE16();
+                s.sCount = stream.readLE16();
+                s.sStart = stream.readLE16();
                 s.sCount = -s.sCount;
                 s.transp = 1;
             }
@@ -6695,15 +6530,13 @@ namespace TR {
 
         void readAnimTex(Stream &stream) {
             uint32 animTexBlockSize;
-#ifdef __MORPHOS__
-            animTexBlockSize = stream.readBE32();
-#else
-            stream.read(animTexBlockSize);
-#endif            
+            animTexBlockSize = stream.readLE32();      
+            printf("[%s][%d] animTexBlockSize=%d pos:%d\n", __FUNCTION__, __LINE__, animTexBlockSize, stream.pos);
             if (animTexBlockSize) {
                 uint16 *animTexBlock = new uint16[animTexBlockSize];
                 for (uint32 i = 0; i < animTexBlockSize; i++) {
                     animTexBlock[i] = stream.readLE16();
+                    printf("[%s][%d]  animTexBlock[%d]=%d pos:%d\n", __FUNCTION__, __LINE__, i, animTexBlock[i], stream.pos);
                 }
 
                 uint16 *ptr = animTexBlock;
@@ -6728,56 +6561,28 @@ namespace TR {
         }
 
         void readEntities(Stream &stream) {
-#ifdef __MORPHOS__
-            entitiesBaseCount = stream.readBE32();
-#else
-            stream.read(entitiesBaseCount);
-#endif          
+            entitiesBaseCount = stream.readLE32();       
+            printf("[%s][%d] entitiesBaseCount=%d pos:%d\n", __FUNCTION__, __LINE__, entitiesBaseCount, stream.pos);
             entitiesCount = entitiesBaseCount + MAX_RESERVED_ENTITIES;
             entities = new Entity[entitiesCount];
             for (int i = 0; i < entitiesBaseCount; i++) {
                 Entity &e = entities[i];
                 uint16 type;
-#ifdef __MORPHOS__
-                type = stream.readBE16();
-#else
-                stream.read(type);
-#endif
+                type = stream.readLE16();
                 e.type = Entity::Type(type);
-#ifdef __MORPHOS__
-                e.room = stream.readBE16();
-                e.x = stream.readBE32();
-                e.y = stream.readBE32();
-                e.z = stream.readBE32();
-                e.rotation.value = stream.readBE16();
-                e.intensity = stream.readBE16();
-#else
-                stream.read(e.room);
-                stream.read(e.x);
-                stream.read(e.y);
-                stream.read(e.z);
-                stream.read(e.rotation.value);
-                stream.read(e.intensity);
-#endif
+                e.room = stream.readLE16();
+                e.x = stream.readLE32();
+                e.y = stream.readLE32();
+                e.z = stream.readLE32();
+                e.rotation.value = stream.readLE16();
+                e.intensity = stream.readLE16();
                 if (version & (VER_TR2 | VER_TR3)) {
-#ifdef __MORPHOS__
-                    e.intensity2 = stream.readBE16();
-#else
-                    stream.read(e.intensity2);
-#endif
+                    e.intensity2 = stream.readLE16();
                 }
                 if (version & (VER_TR4 | VER_TR5)) {
-#ifdef __MORPHOS__
-                    e.OCB = stream.readBE16();
-#else
-                    stream.read(e.OCB);
-#endif
+                    e.OCB = stream.readLE16();
                 }
-#ifdef __MORPHOS__
-                e.flags.value = stream.readBE16();
-#else
-                stream.read(e.flags.value);
-#endif
+                e.flags.value = stream.readLE16();
             }
         }
 
