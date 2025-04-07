@@ -4040,7 +4040,7 @@ namespace TR {
          }
 
         void readSoundOffsets(Stream &stream) {
-            soundDataSize = stream.readLE32();
+            soundOffsetsCount = stream.readLE32();
             soundOffsetsCount > 0 ?  soundOffsets = new uint32[soundOffsetsCount] : NULL;
             for (int i = 0; i < soundOffsetsCount; i++) soundOffsets[i] = stream.readLE32();
             
