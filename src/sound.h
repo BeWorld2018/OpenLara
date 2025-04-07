@@ -889,7 +889,7 @@ namespace Sound {
 
         #ifndef NO_SOUND
             uint32 fourcc;
-            stream->read(fourcc);
+            fourcc = stream->readLE32();
             if (fourcc == FOURCC("RIFF")) // wav
             {
                 struct {
@@ -904,10 +904,15 @@ namespace Sound {
                 stream->seek(8);
                 while (stream->pos < stream->size) {
                     uint32 type, size;
-                    stream->read(type);
-                    stream->read(size);
+                    type = stream->readLE32();
+                    size =  stream->readLE32();
                     if (type == FOURCC("fmt ")) {
-                        stream->raw(&waveFmt, sizeof(waveFmt));
+						waveFmt.format = stream->readLE16();
+                        waveFmt.channels = stream->readLE16();
+                        waveFmt.samplesPerSec = stream->readLE32();
+                        waveFmt.bytesPerSec = stream->readLE32();
+                        waveFmt.block = stream->readLE16();
+                        waveFmt.sampleBits = stream->readLE16();
                         stream->seek(size - sizeof(waveFmt));
                     } else if (type == FOURCC("data")) {
                         if (waveFmt.format == 1) decoder = new PCM(stream, waveFmt.channels, waveFmt.samplesPerSec, size, waveFmt.sampleBits);

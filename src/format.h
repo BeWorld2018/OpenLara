@@ -2869,8 +2869,13 @@ namespace TR {
         float  pitch;
         uint16 index;
         union {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct { uint16 mode:2, count:4, unused:6, camera:1, pitch:1, gain:1, :1; };
             uint16 value;
+#else
+            uint16 value;
+            struct { uint16:1, gain : 1, pitch : 1, camera : 1, unused : 6, count : 4, mode : 2; };
+#endif
         } flags;
     };
 
@@ -6724,7 +6729,12 @@ namespace TR {
                 case VER_TR1_PC  :
                 case VER_TR2_PC  :
                 case VER_TR3_PC  :
-                case VER_TR4_PC  : size = FOURCC(data + 4) + 8; break; // read size from wave header
+                case VER_TR4_PC  : 
+                    size = FOURCC(data + 4) + 8;  
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+                    size = swap32(size);  
+#endif
+                    break; // read size from wave header
                 case VER_TR1_PSX :
                 case VER_TR2_PSX :
                 case VER_TR3_PSX : size = soundSize[index]; break;
