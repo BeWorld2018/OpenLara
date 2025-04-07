@@ -289,15 +289,20 @@ struct Texture : GAPI::Texture {
     }
 
     static uint8* LoadBMP(Stream &stream, uint32 &width, uint32 &height) {
+        printf("%s load BMP\n", __FUNCTION__);
         int32  offset, size;
         uint16 bpp;
         stream.seek(10);
-        stream.read(offset);
+        //stream.read(offset);
+        offset = stream.readLE32();
         stream.seek(4);
-        stream.read(width);
-        stream.read(height);
+        width = stream.readLE32();
+        //stream.read(width);
+        height = stream.readLE32();
+        //stream.read(height);
         stream.seek(2);
-        stream.read(bpp);
+        height = stream.readLE16();
+        //stream.read(bpp);
         stream.seek(8);
         stream.seek(offset - stream.pos);
 
@@ -674,7 +679,7 @@ struct Texture : GAPI::Texture {
 
     static uint8* LoadDATA(Stream &stream, uint32 &width, uint32 &height) {
         uint32 magic;
-        stream.read(magic);
+        magic = stream.readLE32();
         stream.seek(-4);
 
         #ifdef USE_INFLATE

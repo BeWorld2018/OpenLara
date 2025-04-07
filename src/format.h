@@ -3942,17 +3942,24 @@ namespace TR {
         }
 
         void readZones(Stream &stream) {
+          
             for (int i = 0; i < 2; i++) {
-                stream.read(zones[i].ground1, boxesCount);
-                stream.read(zones[i].ground2, boxesCount);
+                Zone& s = zones[i];
+                s.ground1 = new uint16[boxesCount];
+                for (int z = 0; z < boxesCount; z++) s.ground1[z] = stream.readLE16();
+                s.ground2 = new uint16[boxesCount];
+                for (int z = 0; z < boxesCount; z++) s.ground2[z] = stream.readLE16();
                 if (!(version & VER_TR1)) {
-                    stream.read(zones[i].ground3, boxesCount);
-                    stream.read(zones[i].ground4, boxesCount);
+                    s.ground3 = new uint16[boxesCount];
+                    for (int z = 0; z < boxesCount; z++) s.ground3[z] = stream.readLE16();
+                    s.ground4 = new uint16[boxesCount];
+                    for (int z = 0; z < boxesCount; z++) s.ground4[z] = stream.readLE16();
                 } else {
                     zones[i].ground3 = NULL;
                     zones[i].ground4 = NULL;
                 }
-                stream.read(zones[i].fly, boxesCount);
+                s.fly = new uint16[boxesCount];
+                for (int z = 0; z < boxesCount; z++) s.fly[z] = stream.readLE16();
             }
         }
 
@@ -4034,7 +4041,9 @@ namespace TR {
 
         void readSoundOffsets(Stream &stream) {
             soundDataSize = stream.readLE32();
-            soundOffsetsCount > 0 ? stream.read(soundOffsets, soundOffsetsCount) : NULL;
+            soundOffsetsCount > 0 ?  soundOffsets = new uint32[soundOffsetsCount] : NULL;
+            for (int i = 0; i < soundOffsetsCount; i++) soundOffsets[i] = stream.readLE32();
+            
          }
 
         #define CHUNK(str) ((uint64)((const char*)(str))[0]        | ((uint64)((const char*)(str))[1] << 8)  | ((uint64)((const char*)(str))[2] << 16) | ((uint64)((const char*)(str))[3] << 24) | \
