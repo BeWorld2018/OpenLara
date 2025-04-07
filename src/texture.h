@@ -239,7 +239,19 @@ struct Texture : GAPI::Texture {
             uint8  other[48 + 64];
         } pcx;
 
-        stream.raw(&pcx, sizeof(PCX));
+        pcx.magic = stream.read();
+        pcx.version = stream.read();
+        pcx.compression = stream.read();
+        pcx.bpp = stream.read();
+        pcx.rect[0] = stream.readLE16();
+        pcx.rect[1] = stream.readLE16();
+        pcx.rect[2] = stream.readLE16();
+        pcx.rect[3] = stream.readLE16();
+        pcx.width = stream.readLE16();
+        pcx.height = stream.readLE16();
+        stream.seek(sizeof(pcx.other));
+
+        printf("%s pcx.width=%d pcx.height=%d\n", __FUNCTION__, pcx.width, pcx.height);
 
         ASSERT(pcx.bpp == 8);
         ASSERT(pcx.compression == 1);
@@ -293,16 +305,12 @@ struct Texture : GAPI::Texture {
         int32  offset, size;
         uint16 bpp;
         stream.seek(10);
-        //stream.read(offset);
         offset = stream.readLE32();
         stream.seek(4);
         width = stream.readLE32();
-        //stream.read(width);
         height = stream.readLE32();
-        //stream.read(height);
         stream.seek(2);
-        height = stream.readLE16();
-        //stream.read(bpp);
+        bpp = stream.readLE16();
         stream.seek(8);
         stream.seek(offset - stream.pos);
 
@@ -395,7 +403,7 @@ struct Texture : GAPI::Texture {
 
     static uint8* LoadPNG(Stream &stream, uint32 &width, uint32 &height) {
         stream.seek(8);
-
+        printf("%s load PNG\n", __FUNCTION__);
         uint8 bits, colorType, interlace;
         int BPP = 0, BPL = 0;
 
@@ -408,11 +416,12 @@ struct Texture : GAPI::Texture {
     // read chunks
         while (stream.pos < stream.size) {
             uint32 chunkSize, chunkName;
-            chunkSize = swap32(stream.read(chunkSize));
+           //chunkSize = swap32(stream.read(chunkSize));
+            chunkSize = stream.readBE32();
             stream.read(chunkName);
             if (chunkName == FOURCC("IHDR")) { // Image Header
-                width  = swap32(stream.read(width));
-                height = swap32(stream.read(height));
+                width  = stream.readBE32();
+                height = stream.readBE32();
                 stream.read(bits);
                 stream.read(colorType);
                 stream.seek(2);

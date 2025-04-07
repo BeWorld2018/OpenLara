@@ -5,8 +5,8 @@
 #include "texture.h"
 #include "sound.h"
 
-#define NO_VIDEO
-#define VIDEO_TEST
+//#define NO_VIDEO
+//#define VIDEO_TEST
 
 #ifdef _OS_TNS
     #define NO_VIDEO
