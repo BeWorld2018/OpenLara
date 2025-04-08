@@ -99,7 +99,7 @@ namespace GAPI {
         void generateMipMap() {}
 
         void update(void *data) {
-            memcpy(memory, data, width * height * 4);
+            memcpy(memory, data, origWidth * origHeight * 4);
         }
 
         void bind(int sampler) {
@@ -249,7 +249,7 @@ namespace GAPI {
 
     void resize() {
         delete[] swDepth;
-        //swDepth = new DepthSW[Core::width * Core::height];
+        swDepth = new DepthSW[Core::width * Core::height];
     }
 
     inline mat4::ProjRange getProjRange() {
@@ -292,7 +292,7 @@ namespace GAPI {
         }
 
         if (depth) {
-            //memset(swDepth, 0xFF, Core::width * Core::height * sizeof(DepthSW));
+            memset(swDepth, 0xFF, Core::width * Core::height * sizeof(DepthSW));
         }
     }
 
@@ -407,7 +407,7 @@ namespace GAPI {
 
             DepthSW z = DepthSW(uint32(S.z) >> 16);
 
-            {//if (swDepth[x] >= z) {
+            if (swDepth[x] >= z) {
             #ifdef DITHER_FILTER
                 const int *dithX = dithY + (x & 1);
 
@@ -424,7 +424,7 @@ namespace GAPI {
                     index = swLightmap[((S.l >> (16 + 3)) << 8) + index];
 
                     swColor[x] = swPalette[index];
-                    //swDepth[x] = z;
+                    swDepth[x] = z;
                 }
             }
 
@@ -707,7 +707,7 @@ namespace GAPI {
         }
 
         transformLights();
-
+       
         bool colored = transform(mesh->iBuffer, mesh->vBuffer, range.iStart, range.iCount, range.vStart);
 
         Tile8 *oldTile = curTile;
