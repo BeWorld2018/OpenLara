@@ -355,9 +355,9 @@ namespace Sound {
                     channel[i].c1 = coeff1[index];
                     channel[i].c2 = coeff2[index];
                 }
-                for (int i = 0; i < channels; i++) stream->read(channel[i].delta);
-                for (int i = 0; i < channels; i++) stream->read(channel[i].sample1);
-                for (int i = 0; i < channels; i++) stream->read(channel[i].sample2);
+                for (int i = 0; i < channels; i++) channel[i].delta = stream->readLE16();
+                for (int i = 0; i < channels; i++) channel[i].sample1 =stream->readLE16();
+                for (int i = 0; i < channels; i++) channel[i].sample2 = stream->readLE16();
 
                 if (channels == 1)
                 {

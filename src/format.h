@@ -1701,12 +1701,20 @@ namespace TR {
 
     struct Face {
         union {
-            struct { uint16 texture:15, doubleSided:1; };
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            struct { uint16 texture : 15, doubleSided : 1; };
+#else
+            struct { uint16 doubleSided : 1, texture : 15; };
+#endif
             uint16 value;
         } flags;
 
         union {
-            struct { uint16 additive:1, env:1, shininess:6; };
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            struct { uint16 additive : 1, env : 1, shininess : 6; };
+#else
+            struct { uint16 shininess : 6, env : 1, additive : 1; };
+#endif
             uint16 value;
         } effects;
 
@@ -1826,9 +1834,27 @@ namespace TR {
         uint16  meshesCount;
         int16   alternateRoom;
         union {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct {
-                uint16 water:1, :2, sky:1, :1, wind:1, unused:9, visible:1;
+                uint16 water : 1;
+                uint16 : 2;
+                uint16 sky : 1;
+                uint16 : 1;
+                uint16 wind : 1;
+                uint16 unused : 9;
+                uint16 visible : 1;
             };
+#else
+            struct {
+                uint16 visible : 1;
+                uint16 unused : 9;
+                uint16 wind : 1;
+                uint16 : 1;
+                uint16 sky : 1;
+                uint16 : 2;
+                uint16 water : 1;
+            };
+#endif
             uint16 value;
         } flags;
         uint8   waterScheme;
@@ -2046,12 +2072,20 @@ namespace TR {
     };
 
     union Overlap {
-        struct { uint16 boxIndex:15, end:1; };
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        struct { uint16 boxIndex : 15, end : 1; };
+#else
+        struct { uint16 end : 1, boxIndex : 15; };
+#endif
         uint16 value;
     };
 
     struct Flags {
-        uint16 :8, once:1, active:5, :2;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint16 : 8, once : 1, active : 5, : 2;
+#else
+        uint16: 2, active : 5, once : 1, : 8;
+#endif
     };
 
     // internal mesh structure
@@ -2065,9 +2099,17 @@ namespace TR {
         short3      center;
         int16       radius;
         union {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct {
-                uint16 isStatic:1, reserved:15;
+                uint16 isStatic : 1;
+                uint16 reserved : 15;
             };
+#else
+            struct {
+                uint16 reserved : 15;
+                uint16 isStatic : 1;
+            };
+#endif
             uint16 value;
         }           flags;
         int16       vCount;
@@ -2100,9 +2142,31 @@ namespace TR {
             int16 OCB;
         };
         union Flags {
-            struct { 
-                uint16 state:2, unused:3, smooth:1, :1, invisible:1, once:1, active:5, reverse:1, rendered:1;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+                struct {
+                uint16 state : 2;
+                uint16 unused : 3;
+                uint16 smooth : 1;
+                uint16 : 1; // unnamed/reserved
+                uint16 invisible : 1;
+                uint16 once : 1;
+                uint16 active : 5;
+                uint16 reverse : 1;
+                uint16 rendered : 1;
             };
+#else
+            struct {
+                uint16 rendered : 1;
+                uint16 reverse : 1;
+                uint16 active : 5;
+                uint16 once : 1;
+                uint16 invisible : 1;
+                uint16 : 1;
+                uint16 smooth : 1;
+                uint16 unused : 3;
+                uint16 state : 2;
+            };
+#endif
             uint16 value;
         } flags;
     // not exists in file
@@ -2778,7 +2842,21 @@ namespace TR {
             int16   speed;  // for sink (underwater current)
         };
         union {
-            struct { uint16 :8, once:1, :5, :2; };
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            struct {
+                uint16 : 8;
+                uint16 once : 1;
+                uint16 : 5;
+                uint16 : 2;
+            };
+#else
+            struct {
+                uint16 : 2;
+                uint16 : 5;
+                uint16 once : 1;
+                uint16 : 8;
+            };
+#endif
             uint16 boxIndex;
         } flags;
     };
@@ -2829,9 +2907,19 @@ namespace TR {
 
         int16   floor; // Height value in global units
         union {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct {
-                uint16 index:14, block:1, blockable:1;    // Index into Overlaps[].
+                uint16 index : 14;
+                uint16 block : 1;
+                uint16 blockable : 1;
             };
+#else
+            struct {
+                uint16 blockable : 1;
+                uint16 block : 1;
+                uint16 index : 14;
+            };
+#endif
             uint16 value;
         } overlap;
 
@@ -5848,7 +5936,17 @@ namespace TR {
 
                                     if (!f.colored) {
                                         union {
-                                            struct { uint16 texture:12, flip:4; };
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+                                            struct {
+                                                uint16 texture : 12;
+                                                uint16 flip : 4;
+                                            };
+#else
+                                            struct {
+                                                uint16 flip : 4;
+                                                uint16 texture : 12;
+                                            };
+#endif
                                             uint16 value;
                                         } tri;
 
@@ -6260,7 +6358,25 @@ namespace TR {
                         uint8   xh3, x3, yh3, y3;
                     } d;
 
-                    stream.raw(&d, sizeof(d));
+                    d.attribute = stream.readLE16();
+                    d.tile = stream.readLE16();
+                    d.xh0 = stream.read();
+                    d.x0 = stream.read();
+                    d.yh0 = stream.read();
+                    d.y0 = stream.read();
+                    d.xh1 = stream.read();
+                    d.x1 = stream.read();
+                    d.yh1 = stream.read();
+                    d.y1 = stream.read();
+                    d.xh2 = stream.read();
+                    d.x2 = stream.read();
+                    d.yh2 = stream.read();
+                    d.y2 = stream.read();
+                    d.xh3 = stream.read();
+                    d.x3 = stream.read();
+                    d.yh3 = stream.read();
+                    d.y3 = stream.read();
+
                     SET_PARAMS(t, d, 0);
                     break;
                 }

@@ -251,8 +251,6 @@ struct Texture : GAPI::Texture {
         pcx.height = stream.readLE16();
         stream.seek(sizeof(pcx.other));
 
-        printf("%s pcx.width=%d pcx.height=%d\n", __FUNCTION__, pcx.width, pcx.height);
-
         ASSERT(pcx.bpp == 8);
         ASSERT(pcx.compression == 1);
 
@@ -301,7 +299,7 @@ struct Texture : GAPI::Texture {
     }
 
     static uint8* LoadBMP(Stream &stream, uint32 &width, uint32 &height) {
-        printf("%s load BMP\n", __FUNCTION__);
+
         int32  offset, size;
         uint16 bpp;
         stream.seek(10);
@@ -403,7 +401,7 @@ struct Texture : GAPI::Texture {
 
     static uint8* LoadPNG(Stream &stream, uint32 &width, uint32 &height) {
         stream.seek(8);
-        printf("%s load PNG\n", __FUNCTION__);
+
         uint8 bits, colorType, interlace;
         int BPP = 0, BPL = 0;
 
@@ -419,6 +417,7 @@ struct Texture : GAPI::Texture {
            //chunkSize = swap32(stream.read(chunkSize));
             chunkSize = stream.readBE32();
             stream.read(chunkName);
+
             if (chunkName == FOURCC("IHDR")) { // Image Header
                 width  = stream.readBE32();
                 height = stream.readBE32();
@@ -568,7 +567,7 @@ struct Texture : GAPI::Texture {
 
     static uint8* LoadRNC(Stream &stream, uint32 &width, uint32 &height) { // https://github.com/lab313ru/rnc_propack_source
         uint32 magic, size, csize;
-        stream.read(magic);
+        magic = stream.readLE32();
 
         if (magic == FOURCC("RNC\002")) {
             size  = swap32(stream.read(size));
