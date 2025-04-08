@@ -9,6 +9,11 @@
 #    define __ORDER_LITTLE_ENDIAN__ 1234
 #    define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 #endif
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define SYSTEM_LITTLE_ENDIAN 1
+#else
+#define SYSTEM_LITTLE_ENDIAN 0
+#endif
 //#define TEST_SLOW_FIO
 
 #ifdef _DEBUG
@@ -2487,6 +2492,7 @@ static const uint32 BIT_MASK[] = {
     0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
 };
 
+/*
 // TODO: refactor for LE, BE, byte and word reading
 struct BitStream {
     uint8  *data;
@@ -2606,6 +2612,101 @@ struct BitStream {
 
     void skip(int count) {
         readU(count);
+    }
+};*/
+
+struct BitStream {
+    uint8* data;
+    uint8* end;
+    uint16 index;   // current bit index (0-7 or 0-15)
+    uint16 value;   // buffer for bit reading
+    bool isLittleEndian;
+
+    BitStream(uint8* data, int size, bool littleEndian = SYSTEM_LITTLE_ENDIAN)
+        : data(data), end(data + size), index(0), value(0), isLittleEndian(littleEndian) {
+    }
+
+    // Reads a single bit in LE or BE depending on mode
+    inline uint32 readBit() {
+        if (index == 0) {
+            ASSERT(data < end);
+            value = *data++;
+            index = 8;
+        }
+
+        uint32 bit;
+        if (isLittleEndian) {
+            bit = value & 1;
+            value >>= 1;
+        }
+        else {
+            bit = (value >> 7) & 1;
+            value <<= 1;
+        }
+
+        index--;
+        return bit;
+    }
+
+    // Read 'count' bits and return them as uint32
+    uint32 readBits(int count) {
+        ASSERT(count >= 0 && count <= 32);
+        uint32 result = 0;
+
+        for (int i = 0; i < count; ++i) {
+            uint32 bit = readBit();
+            if (isLittleEndian)
+                result |= (bit << i);  // LSB first
+            else
+                result = (result << 1) | bit;  // MSB first
+        }
+
+        return result;
+    }
+
+    // Read a single byte
+    uint8 readByte() {
+        ASSERT(data < end);
+        return *data++;
+    }
+
+    // Read a 16-bit word, respecting endianness
+    uint16 readWord(bool littleEndian) {
+        ASSERT(data + 1 < end);
+        uint8 b1 = *data++;
+        uint8 b2 = *data++;
+        return littleEndian ? (b1 | (b2 << 8)) : ((b1 << 8) | b2);
+    }
+
+    // Read unsigned int using bit buffer with possible multi-word logic
+    uint32 readU(int count) {
+        ASSERT(count >= 0 && count <= 32);
+
+        uint32 bits = 0;
+
+        while (count > 0) {
+            if (index == 0) {
+                value = readWord(true);  // assumes bit buffer is LE
+                index = 16;
+            }
+
+            int take = min(count, (int)index);
+            bits = (bits << take) | ((value >> (index - take)) & BIT_MASK[take]);
+            index -= take;
+            count -= take;
+        }
+
+        return bits;
+    }
+
+    // Skip 'count' bits
+    void skip(int count) {
+        readU(count);
+    }
+
+    // Set the bitstream endianness mode
+    void setEndian(bool littleEndian) {
+        isLittleEndian = littleEndian;
     }
 };
 

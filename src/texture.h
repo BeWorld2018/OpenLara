@@ -551,16 +551,16 @@ struct Texture : GAPI::Texture {
 
     static void rncGetOffset(BitStream &bs, uint16 &offset) {
         offset = 0;
-        if (bs.readBitBE()) {
-            offset = bs.readBitBE();
+        if (bs.readBit()) {
+            offset = bs.readBit();
 
-            if (bs.readBitBE()) {
-                offset = ((offset << 1) | bs.readBitBE()) | 4;
+            if (bs.readBit()) {
+                offset = ((offset << 1) | bs.readBit()) | 4;
 
-                if (!bs.readBitBE())
-                    offset = (offset << 1) | bs.readBitBE();
+                if (!bs.readBit())
+                    offset = (offset << 1) | bs.readBit();
             } else if (!offset)
-                offset = bs.readBitBE() + 2;
+                offset = bs.readBit() + 2;
         }
         offset = ((offset << 8) | bs.readByte()) + 1;
     }
@@ -591,17 +591,17 @@ struct Texture : GAPI::Texture {
         uint32 length = 0;
         uint16 offset = 0;
 
-        bs.readBE(2);
+        bs.readBits(2);
         while (bs.data < bs.end && dst < end) {
-            if (!bs.readBitBE()) {
+            if (!bs.readBit()) {
                 *dst++ = bs.readByte();
             } else {
-                if (bs.readBitBE()) {
-                    if (bs.readBitBE()) {
-                        if (bs.readBitBE()) {
+                if (bs.readBit()) {
+                    if (bs.readBit()) {
+                        if (bs.readBit()) {
                             length = bs.readByte() + 8;
                             if (length == 8) {
-                                bs.readBitBE();
+                                bs.readBit();
                                 continue;
                             }
                         } else
@@ -618,9 +618,9 @@ struct Texture : GAPI::Texture {
                         dst++;
                     }
                 } else {
-                    length = bs.readBitBE() + 4;
-                    if (bs.readBitBE())
-                        length = ((length - 1) << 1) + bs.readBitBE();
+                    length = bs.readBit() + 4;
+                    if (bs.readBit())
+                        length = ((length - 1) << 1) + bs.readBit();
 
                     if (length != 9) {
                         rncGetOffset(bs, offset);
@@ -630,7 +630,7 @@ struct Texture : GAPI::Texture {
                             dst++;
                         }
                     } else {
-                        length = (bs.readBE(4) << 2) + 12;
+                        length = (bs.readBits(4) << 2) + 12;
                         while (length--)
                             *dst++ = bs.readByte();
                     }
