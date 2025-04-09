@@ -1654,7 +1654,11 @@ namespace TR {
         uint16       index;
         uint16       clut;
         uint16       tile;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         uint32       attribute:15, animated:1;    // 0 - opaque, 1 - transparent, 2 - blend additive, animated, triangle
+#else
+        uint32       animated : 1, attribute : 15;
+#endif
         short2       texCoord[4];
         short2       texCoordAtlas[4];
         int16        l, t, r, b;
@@ -1720,7 +1724,11 @@ namespace TR {
 
         short3 normal;
         uint16 vertices[4];
-        uint8  triangle:1, colored:1, water:1, flip:5;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint8 triangle : 1, colored : 1, water : 1, flip : 5;
+#else
+        uint8 flip : 5, water : 1, colored : 1, triangle : 1;
+#endif
 
         Face() : triangle(0), colored(0), water(0), flip(0) {
             flags.value   = 0;
@@ -2020,29 +2028,60 @@ namespace TR {
     union FloorData {
         uint16 value;
         union Command {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct {
-                uint16 func:5, tri:3, sub:7, end:1;
+                uint16 func : 5, tri : 3, sub : 7, end : 1;
             };
+#else
             struct {
-                int16 :5, a:5, b:5, :1;
+                uint16 end : 1, sub : 7, tri : 3, func : 5;
+            };
+#endif
+            struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+                int16 : 5, a : 5, b : 5, : 1;
+#else
+            int16:1, b : 5, a : 5, : 5;
+#endif
             } triangle;
         } cmd;
         struct {
-            int16 slantX:8, slantZ:8;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            int16 slantX : 8, slantZ : 8;
+#else
+            int16 slantZ : 8, slantX : 8;
+#endif
         };
         struct {
-            uint16 a:4, b:4, c:4, d:4;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint16 a : 4, b : 4, c : 4, d : 4;
+#else
+            uint16 d : 4, c : 4, b : 4, a : 4;
+#endif
         };
         struct TriggerInfo {
-            uint16  timer:8, once:1, mask:5, :2;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint16 timer : 8, once : 1, mask : 5, : 2;
+#else
+        uint16:2, mask : 5, once : 1, timer : 8;
+#endif
         } triggerInfo;
         union TriggerCommand {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             struct {
-                uint16 args:10, action:5, end:1;
+                uint16 args : 10, action : 5, end : 1;
             };
             struct {
-                uint16 timer:8, once:1, speed:5, :2;
+                uint16 timer : 8, once : 1, speed : 5, : 2;
             };
+#else
+            struct {
+                uint16 end : 1, action : 5, args : 10;
+            };
+            struct {
+            uint16:2, speed : 5, once : 1, timer : 8;
+            };
+#endif
         } triggerCmd;
 
         enum {
@@ -3838,7 +3877,9 @@ namespace TR {
 
 			meshDataSize = stream.readLE32();
             meshData = meshDataSize ? new uint16[meshDataSize] : NULL;
-            stream.raw(meshData, sizeof(uint16) * meshDataSize);
+            //stream.raw(meshData, sizeof(uint16) * meshDataSize);
+            for (int i = 0; i < meshDataSize; i++)
+                meshData[i] = stream.readLE16();
             
 			meshOffsetsCount = stream.readLE32();
             meshOffsets = meshOffsetsCount ? new int32[meshOffsetsCount] : NULL;
@@ -4892,7 +4933,17 @@ namespace TR {
             stream.seek(2); // skip unknown word
             cameraFramesCount = (stream.size - 2) / 16;
             cameraFrames = cameraFramesCount ? new CameraFrame[cameraFramesCount] : NULL;
-            stream.raw(cameraFrames, cameraFramesCount * 16);
+            //stream.raw(cameraFrames, cameraFramesCount * 16);
+            for (int i = 0; i < (cameraFramesCount * 16); i++) {
+                cameraFrames[i].target.x = stream.readLE16();
+                cameraFrames[i].target.y = stream.readLE16();
+                cameraFrames[i].target.z = stream.readLE16();
+                cameraFrames[i].pos.x = stream.readLE16();
+                cameraFrames[i].pos.y = stream.readLE16();
+                cameraFrames[i].pos.z = stream.readLE16();
+                cameraFrames[i].fov = stream.readLE16();
+                cameraFrames[i].roll = stream.readLE16();
+            }
         }
 
         void appendObjectTex(TextureInfo *&objTex, int32 &count) {
