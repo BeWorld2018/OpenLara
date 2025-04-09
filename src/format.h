@@ -1654,11 +1654,7 @@ namespace TR {
         uint16       index;
         uint16       clut;
         uint16       tile;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         uint32       attribute:15, animated:1;    // 0 - opaque, 1 - transparent, 2 - blend additive, animated, triangle
-#else
-        uint32       animated : 1, attribute : 15;
-#endif
         short2       texCoord[4];
         short2       texCoordAtlas[4];
         int16        l, t, r, b;
@@ -3877,9 +3873,7 @@ namespace TR {
 
 			meshDataSize = stream.readLE32();
             meshData = meshDataSize ? new uint16[meshDataSize] : NULL;
-            //stream.raw(meshData, sizeof(uint16) * meshDataSize);
-            for (int i = 0; i < meshDataSize; i++)
-                meshData[i] = stream.readLE16();
+            stream.raw(meshData, sizeof(uint16) * meshDataSize);
             
 			meshOffsetsCount = stream.readLE32();
             meshOffsets = meshOffsetsCount ? new int32[meshOffsetsCount] : NULL;
@@ -4933,7 +4927,9 @@ namespace TR {
             stream.seek(2); // skip unknown word
             cameraFramesCount = (stream.size - 2) / 16;
             cameraFrames = cameraFramesCount ? new CameraFrame[cameraFramesCount] : NULL;
-            //stream.raw(cameraFrames, cameraFramesCount * 16);
+            stream.raw(cameraFrames, cameraFramesCount * 16);
+           /*
+             // Used by loadTR1_SAT
             for (int i = 0; i < (cameraFramesCount * 16); i++) {
                 cameraFrames[i].target.x = stream.readLE16();
                 cameraFrames[i].target.y = stream.readLE16();
@@ -4943,7 +4939,7 @@ namespace TR {
                 cameraFrames[i].pos.z = stream.readLE16();
                 cameraFrames[i].fov = stream.readLE16();
                 cameraFrames[i].roll = stream.readLE16();
-            }
+            }*/
         }
 
         void appendObjectTex(TextureInfo *&objTex, int32 &count) {
