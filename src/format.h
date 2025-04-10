@@ -3588,8 +3588,13 @@ namespace TR {
         void loadTR2_PC (Stream &stream) {
             stream.read(palette,   256);
             stream.read(palette32, 256);
-            stream.read(tiles8, stream.read(tilesCount));
-            stream.read(tiles16, tilesCount);
+            tilesCount = stream.readLE32();
+            stream.read(tiles8, tilesCount);
+
+            tiles16 = new Tile16[tilesCount];
+            for (int i = 0; i < tilesCount; i++) 
+                for (int j = 0; j < (256 * 256); j++)
+                    tiles16[i].color[j].value = stream.readLE16();
 
             readDataArrays(stream);
             readObjectTex(stream);
@@ -6882,7 +6887,11 @@ namespace TR {
             }
             return Color32(255, 0, 255, 255);
         }
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        static uint32 readLE32(const uint8* p) {
+            return (uint32(p[0]) | (uint32(p[1]) << 8) | (uint32(p[2]) << 16) | (uint32(p[3]) << 24));
+        }
+#endif
         Stream* getSampleStream(int index) const {
             if (!soundOffsets || !soundData) return NULL;
             uint8 *data = soundData + soundOffsets[index];
@@ -6895,8 +6904,9 @@ namespace TR {
                 case VER_TR4_PC  : 
                     size = FOURCC(data + 4) + 8;  
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-                    size = swap32(size);  
+                    size = readLE32(data + 4) + 8;
 #endif
+                    //printf("%s index=%d  size=%d\n", __FUNCTION__, index, size);
                     break; // read size from wave header
                 case VER_TR1_PSX :
                 case VER_TR2_PSX :
