@@ -1,27 +1,29 @@
-SRCS=main.cpp \
-     ../../libs/stb_vorbis/stb_vorbis.c \
-     ../../libs/minimp3/minimp3.cpp \
-     ../../libs/tinf/tinflate.c
-CC=g++
+OBJS_C   :=	main.o\
+     ../../libs/stb_vorbis/stb_vorbis.o \
+     ../../libs/minimp3/minimp3.o \
+     ../../libs/tinf/tinflate.o
+	 
+CC = ppc-morphos-gcc-11
+CXX = ppc-morphos-g++-11
 
-SDL_CFLAGS := $(shell sdl2-config --cflags)
+TARGET = openlara
+
+SDL_CFLAGS := $(shell sdl2-config --cflags) -I/gg/usr/local/include
 SDL_LDFLAGS := $(shell sdl2-config --libs)
 
-CFLAGS+=-DSDL2_GLES -D_GAPI_GLES2 -std=c++11 -O3 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -Wl,--gc-sections -D__SDL2__ $(SDL_CFLAGS) -Wall
-LDFLAGS+=-lGLESv2 -lEGL -lm -lrt -lpthread -lasound -ludev $(SDL_LDFLAGS)
+CFLAGS+= -std=c++11 -O1 -g -I../../ -fno-exceptions -Wno-unused-variable -fno-rtti  -D__SDL2__ $(SDL_CFLAGS) -Wall
+#-ffunction-sections -fdata-sections -Wl,--gc-sections
+CXXFLAGS+= $(CFLAGS)
+LDFLAGS+= $(SDL_LDFLAGS) -lpthread 
 
-INCLUDES+=-I../../
+all: $(TARGET)
 
-openlara :
-	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $(SRCS) -o $@
-
-install : openlara
-	install -d $(DESTDIR)$(PREFIX)/bin/
-	install openlara $(DESTDIR)$(PREFIX)/bin/OpenLara
-
-uninstall :
-	rm -f $(DESTDIR)$(PREFIX)/bin/OpenLara
+$(TARGET): $(OBJS_C)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f OpenLara
+	rm -f $(OBJS_C) 
+	rm -f $(TARGET) $(TARGET).s 
 
+dump:
+	ppc-morphos-objdump --disassemble-all --reloc $(TARGET) >$(TARGET).s

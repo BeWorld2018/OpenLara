@@ -1,14 +1,20 @@
 #include <string.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#ifndef __MORPHOS__
 #include <unistd.h>
 #include <pwd.h>
+#endif
 
 #include <SDL2/SDL.h>
 
 #include "game.h"
 
 #define WND_TITLE    "OpenLara"
+
+#ifdef __MORPHOS__
+unsigned long _stack = 1024 * 1024 * 2;
+#endif
 
 // timing
 unsigned int startTime;
@@ -90,7 +96,8 @@ SDL_GameController *sdl_controllers[MAX_JOYS];
 SDL_Haptic *sdl_haptics[MAX_JOYS];
 SDL_Window *sdl_window;
 SDL_DisplayMode sdl_displaymode;
-
+SDL_Renderer *sdl_renderer;
+SDL_Texture *texture;
 bool fullscreen;
 
 vec2 joyL, joyR;
@@ -117,20 +124,44 @@ bool isKeyPressed (SDL_Scancode scancode) {
     return false;
 }
 
+void resize_texture(int w, int h) 
+{
+	Core::width  = w;
+    Core::height = h;
+#if defined(_GAPI_SW)
+    SDL_DestroyTexture(texture);
+    delete[] GAPI::swColor;
+	
+	GAPI::swColor = new GAPI::ColorSW[Core::width * Core::height];
+    GAPI::resize();
+
+    texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Core::width, Core::height);
+    if (texture == NULL) {
+        printf("Unable to create the texture\n");
+    }
+#endif
+
+}
+
 #ifndef _GAPI_GLES 
 void toggleFullscreen () {
 
     Uint32 flags = 0;
+	int w, h;
+    
+	fullscreen = !fullscreen;
 
-    fullscreen = !fullscreen;
-
-    flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+    flags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
     SDL_SetWindowFullscreen (sdl_window, flags);
 
     // Tell the engine we have changed display size!
-    Core::width  = fullscreen ? sdl_displaymode.w : WIN_W;
-    Core::height = fullscreen ? sdl_displaymode.h : WIN_H;
+	SDL_GetWindowSize(sdl_window, &w, &h);
+	resize_texture(w, h);
+	
+	// SDL_RenderClear(sdl_renderer);
+    // Core::width  = fullscreen ? sdl_displaymode.w : WIN_W;
+    // Core::height = fullscreen ? sdl_displaymode.h : WIN_H;
 }
 #endif
 
@@ -344,10 +375,20 @@ void inputUpdate() {
     SDL_Event event;
 
     while (SDL_PollEvent(&event) == 1) { // while there are still events to be processed
-        switch (event.type) {
+        switch (event.type) 
+		{	
+		
+			case SDL_WINDOWEVENT_RESIZED:
+				int w, h;
+				w = event.window.data1;
+				h = event.window.data2;
+								
+				resize_texture(w, h);
+
+				break;
             case SDL_QUIT:
                 Core::isQuit = true;
-
+				break;
             case SDL_KEYDOWN: {
                 int scancode = event.key.keysym.scancode;
                 InputKey key = codeToInputKey(scancode);
@@ -422,6 +463,7 @@ void inputUpdate() {
                 break;
             }
 
+#ifndef __MORPHOS__
             // Joystick reading using the old SDL Joystick interface
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
@@ -479,6 +521,7 @@ void inputUpdate() {
                     }
                     break;
                 }
+#endif
         }
     }
 }
@@ -532,44 +575,59 @@ int main(int argc, char **argv) {
     }
 
     int w, h;
-    SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER|SDL_INIT_HAPTIC);
+    // SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER/*|SDL_INIT_HAPTIC*/);
 
-    SDL_GetCurrentDisplayMode(0, &sdl_displaymode);
+    //SDL_GetCurrentDisplayMode(0, &sdl_displaymode);
 
 #ifdef _GAPI_GLES
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    //SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    /* In GLES, start in fullscreen mode using the vide mode currently in use. */
-    sdl_window = SDL_CreateWindow(WND_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-#ifdef _GAPI_GLES
-        sdl_displaymode.w, sdl_displaymode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP
-#else
-        WIN_W, WIN_H, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+	sdl_window = SDL_CreateWindow(WND_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        WIN_W, WIN_H, 
+        #ifndef _GAPI_SW
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+        #else
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE//| SDL_WINDOW_FULLSCREEN_DESKTOP
+        #endif
+  ); 
+
+#ifdef _GAPI_SW
+    sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (sdl_renderer == NULL) {
+        printf("Unable to create the renderer\n");
+        return -1;
+    }
 #endif
-    ); 
- 
+
     // We try to use the current video mode, but we inform the core of whatever mode SDL2 gave us in the end. 
     SDL_GetWindowSize(sdl_window, &w, &h);
 
     Core::width  = w;
     Core::height = h;
 
+#if !defined(_GAPI_SW)
     SDL_GLContext context = SDL_GL_CreateContext(sdl_window);
-
+#endif
     SDL_ShowCursor(SDL_DISABLE);
 
     const char *home;
+	#ifdef __MORPHOS__
+	home="PROGDIR:";
+	strcat(cacheDir, home);
+    strcat(cacheDir, ".openlara/");
+	#else
     if (!(home = getenv("HOME")))
         home = getpwuid(getuid())->pw_dir;
-    strcat(cacheDir, home);
+	   strcat(cacheDir, home);
     strcat(cacheDir, "/.openlara/");
+	#endif
 
     struct stat st = {0};
     if (stat(cacheDir, &st) == -1 && mkdir(cacheDir, 0777) == -1)
@@ -586,19 +644,50 @@ int main(int argc, char **argv) {
 
     Game::init(lvlName);
 
+#if defined(_GAPI_SW)
+    GAPI::swColor = new GAPI::ColorSW[Core::width * Core::height];
+    GAPI::resize();
+
+    texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Core::width, Core::height);
+    if (texture == NULL) {
+        printf("Unable to create the texture\n");
+        return -1;
+    }
+	void *p;
+    int pitch; 
+#endif
+
     while (!Core::isQuit) {
         inputUpdate();
 
         if (Game::update()) {
             Game::render();
             Core::waitVBlank();
+#if defined(_GAPI_SW)
+            SDL_LockTexture(texture, NULL, &p, &pitch);
+            SDL_memcpy(p, GAPI::swColor, Core::width * Core::height * 4);
+            SDL_UnlockTexture(texture);
+            SDL_RenderCopy(sdl_renderer, texture, NULL, NULL);
+            SDL_RenderPresent(sdl_renderer);
+#else
             SDL_GL_SwapWindow(sdl_window);
+#endif
         }
     };
 
     sndFree();
     Game::deinit();
 
+#if defined(_GAPI_SW)
+    SDL_DestroyTexture(texture);
+    delete[] GAPI::swColor;
+	
+	SDL_DestroyRenderer(sdl_renderer);
+	
+#else
+
+	SDL_GL_DeleteContext(context);
+#endif
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();
 
