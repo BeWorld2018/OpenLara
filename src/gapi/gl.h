@@ -578,7 +578,7 @@ namespace GAPI {
                 case Core::passGUI     : source = SHADER_GUI;     break;
                 default                : ASSERT(false); LOG("! wrong pass id\n"); return;
             }
-
+           
             #ifdef _DEBUG_SHADERS
                 Stream *stream = NULL;
                 switch (pass) {
@@ -656,10 +656,11 @@ namespace GAPI {
             }
 
             ID = glCreateProgram();
-
+#ifndef __MORPHOS__
             if (!(Core::support.shaderBinary && linkBinary(fileName))) { // try to load cached shader     
                 if (linkSource(source, defines) && Core::support.shaderBinary) { // compile shader from source and dump it into cache
                 #ifndef _OS_WEB
+
                     GLenum format = 0, size;
                     glGetProgramiv(ID, GL_PROGRAM_BINARY_LENGTH, (GLsizei*)&size);
                     char *data = new char[8 + size];
@@ -668,10 +669,11 @@ namespace GAPI {
                     *(int*)(&data[4]) = size;
                     Stream::cacheWrite(fileName, data, 8 + size);
                     delete[] data;
+
                 #endif
                 }
             }
-
+#endif
             #ifdef _DEBUG_SHADERS
                 delete[] sourceData;
             #endif
@@ -728,6 +730,10 @@ namespace GAPI {
         }
     
         bool linkBinary(const char *name) {
+#ifdef __MORPHOS__
+
+            return false;
+#else
             // non-async code!
             char path[255];
             strcpy(path, cacheDir);
@@ -750,6 +756,7 @@ namespace GAPI {
             delete stream;
 
             return checkLink();
+#endif
         }
 
         bool checkLink() {
@@ -1013,10 +1020,10 @@ namespace GAPI {
             this->iCount = iCount;
             this->vCount = vCount;
             this->aCount = aCount;
-
+#ifndef __MORPHOS__
             if (Core::support.VAO)
                 glBindVertexArray(Core::active.VAO = 0);
-
+#endif
             bool useVBO = Core::support.VBO;
 
             #ifdef DYNGEOM_NO_VBO
@@ -1038,11 +1045,12 @@ namespace GAPI {
                 vBuffer = new GAPI::Vertex[vCount];
                 update(indices, iCount, vertices, vCount);
             }
-            
+#ifndef __MORPHOS__   
             if (Core::support.VAO && aCount) {
                 VAO = new GLuint[aCount];
                 glGenVertexArrays(aCount, VAO);
             }
+#endif
         }
 
         void deinit() {
@@ -1050,20 +1058,22 @@ namespace GAPI {
                 delete[] iBuffer;
                 delete[] vBuffer;
             } else {
+#ifndef __MORPHOS__
                 if (VAO) {
                     glDeleteVertexArrays(aCount, VAO);
                     delete[] VAO;
                 }
+#endif
                 glDeleteBuffers(2, ID);
             }
         }
 
         void update(Index *indices, int iCount, ::Vertex *vertices, int vCount) {
             ASSERT(sizeof(GAPI::Vertex) == sizeof(::Vertex));
-
+#ifndef __MORPHOS__
             if (Core::support.VAO && Core::active.VAO != 0)
                 glBindVertexArray(Core::active.VAO = 0);
-
+#endif
             if (indices && iCount) {
                 if (iBuffer) {
                     memcpy(iBuffer, indices, iCount * sizeof(Index));
@@ -1112,13 +1122,16 @@ namespace GAPI {
                 setupFVF(vBuffer + range.vStart);
             } else {
                 ASSERT(Core::support.VAO);
+#ifndef __MORPHOS__
                 GLuint vao = VAO[range.aIndex];
                 if (Core::active.VAO != vao)
                     glBindVertexArray(Core::active.VAO = vao);
+#endif
             }
         }
 
         void initNextRange(MeshRange &range, int &aIndex) const {
+#ifndef __MORPHOS__
             if (Core::support.VAO && VAO) {
                 ASSERT(aIndex < aCount);
 
@@ -1134,6 +1147,7 @@ namespace GAPI {
 
                 glBindVertexArray(Core::active.VAO = 0);
             } else
+#endif
                 range.aIndex = -1;
         }
     };
@@ -1149,7 +1163,7 @@ namespace GAPI {
 
 
     bool extSupport(const char *str) {
-        #if !defined(_GAPI_GLES2) && !_OS_MAC
+        #if !defined(_GAPI_GLES2) && !_OS_MAC && !__MORPHOS__
         if (glGetStringi != NULL) {
             GLint count = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &count); 
@@ -1254,14 +1268,14 @@ namespace GAPI {
                 GetProcOGL(glBufferData);
                 GetProcOGL(glBufferSubData);
             #endif
-
+#ifndef __MORPHOS__
             GetProcOGL(glGenVertexArrays);
             GetProcOGL(glDeleteVertexArrays);
             GetProcOGL(glBindVertexArray);
 
             GetProcOGL(glGetProgramBinary);
             GetProcOGL(glProgramBinary);
-
+#endif
             #if defined(_GAPI_GLES)
                 GetProcOGL(glDiscardFramebufferEXT);
             #endif
@@ -1500,9 +1514,10 @@ namespace GAPI {
     void endFrame() {}
 
     void resetState() {
+#ifndef __MORPHOS__
         if (Core::support.VAO)
             glBindVertexArray(0);
-
+#endif
         #ifndef FFP
             glActiveTexture(GL_TEXTURE0);
             glUseProgram(0);
