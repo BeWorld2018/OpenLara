@@ -1151,11 +1151,7 @@ struct ubyte2 {
 };
 
 union ubyte4 {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     struct { uint8 x, y, z, w; };
-#else
-    struct { uint8 w, z, y, x; };
-#endif
     uint32 value;
 
     ubyte4() {}
@@ -1442,11 +1438,7 @@ struct Box {
 
 union Color32 { // RGBA8888
     uint32 value;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     struct { uint8 r, g, b, a; };
-#else
-    struct { uint8 a, b, g, r; };
-#endif
 
     Color32() {}
     Color32(uint32 value) : value(value) {}
@@ -1508,21 +1500,21 @@ struct Color24 { // RGB888
 };
 
 union Color16 { // RGBA5551
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+//#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     struct {
         uint16 b : 5;
         uint16 g : 5;
         uint16 r : 5;
         uint16 a : 1;
     };
-#else
+/*#else
     struct {
         uint16 a : 1;
         uint16 r : 5;
         uint16 g : 5;
         uint16 b : 5;
     };
-#endif
+#endif*/
     uint16 value;
 
     Color16() {}
@@ -1533,11 +1525,11 @@ union Color16 { // RGBA5551
 };
 
 union ColorCLUT { // RGBA5551
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+//#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     struct { uint16 r : 5, g : 5, b : 5, a : 1; };
-#else
-    struct { uint16 a : 1, b : 5, g : 5, r : 5; };
-#endif
+//#else
+//    struct { uint16 a : 1, b : 5, g : 5, r : 5; };
+//#endif
     uint16 value;
 
     ColorCLUT() {}
