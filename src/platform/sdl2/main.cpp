@@ -9,6 +9,27 @@
 #include <SDL2/SDL.h>
 
 #include "game.h"
+void dump(const char *fileName) {
+	
+    int width  = Core::width;
+	int height = Core::height;
+	int size = width * height * 4;
+    char *data = new char[size];
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	char* flipped = new char[size];
+	for (int y = 0; y < height; y++) {
+		memcpy(
+			flipped + y * width * 4,
+			data + (height - 1 - y) * width * 4,
+			width * 4
+		);
+	}
+
+	Texture::SaveBMP(fileName, flipped, width, height);
+	delete[] flipped;
+	delete[] data;
+}
 
 #define WND_TITLE    "OpenLara"
 
@@ -401,6 +422,9 @@ void inputUpdate() {
                     if (isKeyPressed(SDL_SCANCODE_LALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
                         toggleFullscreen();
                     }
+                }
+				if (scancode == SDL_SCANCODE_F1) {
+                    dump("screenshot");
                 }
 #endif
                 break;

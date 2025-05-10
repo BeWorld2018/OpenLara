@@ -215,10 +215,31 @@ struct Texture : GAPI::Texture {
         FILE *f = fopen(buf, "wb");
         if (f) {
             uint16 type = 'B' + ('M' << 8);
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            type = swap16(type),
+
+            fhdr.bfSize = swap32(fhdr.bfSize);
+            fhdr.bfReserved1 = swap16(fhdr.bfReserved1);
+            fhdr.bfReserved2 = swap16(fhdr.bfReserved2);
+            fhdr.bfOffBits = swap32(fhdr.bfOffBits);
+
+            ihdr.biSize = swap32(ihdr.biSize);
+            ihdr.biWidth = swap32(ihdr.biWidth);
+            ihdr.biHeight = swap32(ihdr.biHeight);
+            ihdr.biPlanes = swap16(ihdr.biPlanes);
+            ihdr.biBitCount = swap16(ihdr.biBitCount);
+            ihdr.biCompression = swap32(ihdr.biCompression);
+            ihdr.biSizeImage = swap32(ihdr.biSizeImage);
+            ihdr.biXPelsPerMeter = swap32(ihdr.biXPelsPerMeter);
+            ihdr.biYPelsPerMeter = swap32(ihdr.biYPelsPerMeter);
+            ihdr.biClrUsed = swap32(ihdr.biClrUsed);
+            ihdr.biClrImportant = swap32(ihdr.biClrImportant);
+#endif
+            
             fwrite(&type, sizeof(type), 1, f);
             fwrite(&fhdr, sizeof(fhdr), 1, f);
             fwrite(&ihdr, sizeof(ihdr), 1, f);
-            fwrite(data, ihdr.biSizeImage, 1, f);
+            fwrite(data, (width* height * 4), 1, f);
             LOG("save %s\n", buf);
             fclose(f);
         } else

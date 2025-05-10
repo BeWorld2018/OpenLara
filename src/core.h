@@ -63,8 +63,9 @@
     #define INV_QUALITY
     #define INV_STEREO
 #elif __SDL2__
-   #define _GAPI_SW    1
-   // #define _GAPI_GL   1
+   //#define _GAPI_SW    1
+    #define _GAPI_GL   1
+    #define FFP 1
     #ifdef SDL2_GLES
         #define _GAPI_GLES 1
         #define DYNGEOM_NO_VBO
