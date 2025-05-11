@@ -1745,6 +1745,7 @@ struct Level : IGame {
             atlasSprites =
             atlasGlyphs  = new Texture(level.tiles4, level.tilesCount, level.cluts, level.clutsCount);
         #else
+            level.tilesCount++; // reserve one tile for the common textures
             Texture::Tile *tiles = new Texture::Tile[level.tilesCount];
             for (int i = 0; i < level.tilesCount; i++) {
                 tiles[i].width = tiles[i].height = 256;
@@ -1776,6 +1777,61 @@ struct Level : IGame {
                     tiles[i].data = (uint32*)Texture::LoadPNG(stream, tiles[i].width, tiles[i].height);
                 }
             }
+
+            // add common textures
+            static const uint32 CommonTexData[CTEX_MAX][25] = {
+            // flash bar
+                { 0x00000000, 0xFFA20058, 0xFFFFFFFF, 0xFFA20058, 0x00000000 },
+            // health bar
+                { 0xFF2C5D71, 0xFF5E81AE, 0xFF2C5D71, 0xFF1B4557, 0xFF16304F },
+            // oxygen bar
+                { 0xFF647464, 0xFFA47848, 0xFF647464, 0xFF4C504C, 0xFF303030 },
+            // option bar
+                { 0x00000000, 0x20202020, 0x20202020, 0x20202020, 0x00000000,
+                    0x00000000, 0x60606060, 0x60606060, 0x60606060, 0x00000000,
+                    0x00000000, 0x80808080, 0x80808080, 0x80808080, 0x00000000,
+                    0x00000000, 0x60606060, 0x60606060, 0x60606060, 0x00000000,
+                    0x00000000, 0x20202020, 0x20202020, 0x20202020, 0x00000000 },
+            // white room
+                { 0xFFFFFFFF },
+            // white object
+                { 0xFFFFFFFF },
+            // white sprite
+                { 0xFFFFFFFF },
+            };
+            const short2 CommonTexOffset[] = { short2(1, 5), short2(1, 5), short2(1, 5), short2(5, 5), short2(1, 1), short2(1, 1), short2(1, 1) };
+            ASSERT(COUNT(CommonTexOffset) == CTEX_MAX);
+            memset(CommonTex, 0, sizeof(CommonTex));
+            int16 yofs = 0;
+            for (int i = 0; i < CTEX_MAX; i++) {
+                CommonTex[i].type = CommonTex[i].dataType = TR::TEX_TYPE_SPRITE;
+                CommonTex[i].tile = level.tilesCount - 1;
+
+                const short2* ofs = &CommonTexOffset[i];
+                short2* uv = CommonTex[i].texCoordAtlas;
+                uv[0].x = uv[3].x = 0 << 7;
+                uv[1].x = uv[2].x = (ofs->x /* - 1*/) << 7;
+                uv[0].y = uv[1].y = yofs << 7;
+                uv[2].y = uv[3].y = (yofs + ofs->y /* - 1*/) << 7;
+
+                Texture::Tile& tile = tiles[CommonTex[i].tile];
+                for (int y = 0; y < ofs->y; y++) {
+                    for (int x = 0; x < ofs->x; x++) {
+                        //printf("%d - (%2d,%2d) = %08x\n", i, x, y, CommonTexData[i][y + x * ofs->y]);
+                        tile.data[(yofs + y) * tile.width + x] = CommonTexData[i][y + x*ofs->y];
+                    }
+                }
+
+                yofs += ofs->y;
+            }
+            /*
+            for (int i = 0; i < CTEX_MAX; i++) {
+                printf("%d - %d \n", i, CommonTex[i].tile);
+                TR::TextureInfo& t = CommonTex[i];
+                for (int j = 0; j < 4; j++) printf("%d tile %d texCoordAtlas[%d] = (%f,%f)\n", i, t.tile, j, (float)t.texCoordAtlas[j].x / 128, (float)t.texCoordAtlas[j].y / 128);
+            }
+            */
+            //Texture::SaveBMP("atlasc", (const char *)tiles[level.tilesCount - 1].data, tiles[level.tilesCount - 1].width, tiles[level.tilesCount - 1].height);
 
             atlasRooms   =
             atlasObjects =

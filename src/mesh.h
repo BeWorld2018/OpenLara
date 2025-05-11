@@ -1316,6 +1316,20 @@ struct MeshBuilder {
     void addDynBar(const TR::TextureInfo &tile, const vec2 &pos, const vec2 &size, uint32 color, uint32 color2 = 0) {
         dynCheck(1 * 6);
 
+#ifdef SPLIT_BY_TILE
+        if (tile.tile != curTile
+#ifdef SPLIT_BY_CLUT
+            || tile.clut != curClut
+#endif
+            ) {
+            dynEnd();
+            dynBegin();
+            curTile = tile.tile;
+            curClut = tile.clut;
+            atlas->bindTile(curTile, curClut);
+        }
+#endif
+
         Index *indices   = dynIndices;
         Vertex *vertices = dynVertices;
         int &iCount      = dynICount;
@@ -1351,6 +1365,20 @@ struct MeshBuilder {
 
     void addDynFrame(const vec2 &pos, const vec2 &size, uint32 color1, uint32 color2) {
         dynCheck(4 * 6);
+
+#ifdef SPLIT_BY_TILE
+        if (whiteSprite.tile != curTile
+#ifdef SPLIT_BY_CLUT
+            || whiteSprite.clut != curClut
+#endif
+            ) {
+            dynEnd();
+            dynBegin();
+            curTile = whiteSprite.tile;
+            curClut = whiteSprite.clut;
+            atlas->bindTile(curTile, curClut);
+        }
+#endif
 
         Index *indices   = dynIndices;
         Vertex *vertices = dynVertices;
