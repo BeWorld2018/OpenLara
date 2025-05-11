@@ -2110,7 +2110,7 @@ struct Level : IGame {
 
             Core::setBlendMode(bmPremult);
 
-            #ifdef MERGE_SPRITES
+            #if defined(MERGE_SPRITES) || !defined(_GAPI_SW)
                 basis.rot = Core::mViewInv.getRot();
             #else
                 basis.rot = quat(0, 0, 0, 1);
@@ -2471,7 +2471,7 @@ struct Level : IGame {
                 Basis b;
                 b.w   = 1.0f;
                 b.pos = Core::viewPos.xyz();
-                #ifdef MERGE_SPRITES
+                #if defined(MERGE_SPRITES) || !defined(_GAPI_SW)
                     b.rot = Core::mViewInv.getRot();
                 #else
                     b.rot = quat(0, 0, 0, 1);
