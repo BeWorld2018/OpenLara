@@ -1817,8 +1817,10 @@ struct Level : IGame {
                 Texture::Tile& tile = tiles[CommonTex[i].tile];
                 for (int y = 0; y < ofs->y; y++) {
                     for (int x = 0; x < ofs->x; x++) {
-                        //printf("%d - (%2d,%2d) = %08x\n", i, x, y, CommonTexData[i][y + x * ofs->y]);
-                        tile.data[(yofs + y) * tile.width + x] = CommonTexData[i][y + x*ofs->y];
+                        uint32 rgba = CommonTexData[i][y + x * ofs->y];
+                        Color32 color(rgba & 255, (rgba >> 8) & 255, (rgba >> 16) & 255, (rgba >> 24) & 255);
+                        //printf("%d - (%2d,%2d) = %08x (%3d,%3d,%3d,%3d)\n", i, x, y, color.value, color.r, color.g, color.b, color.a);
+                        tile.data[(yofs + y) * tile.width + x] = color.value;
                     }
                 }
 
