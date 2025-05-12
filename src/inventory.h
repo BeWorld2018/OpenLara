@@ -1742,13 +1742,13 @@ struct Inventory {
 
         float aspectImg = aspectSrc / aspectDst;
 
-        #ifdef FFP
+        /*#ifdef FFP
             mat4 m;
             m.identity();
             Core::setViewProj(m, m);
             Core::mModel.identity();
             Core::mModel.scale(vec3(1.0f / 32767.0f));
-        #endif
+        #endif*/
 
         short o_frame = 32767;
         short i_frame = 16384;
