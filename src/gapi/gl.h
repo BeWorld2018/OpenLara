@@ -1085,6 +1085,14 @@ namespace GAPI {
             if (vertices && vCount) {
                 if (vBuffer) {
                     memcpy(vBuffer, vertices, vCount * sizeof(GAPI::Vertex));
+#ifdef FFP
+                    for (int i = 0; i < vCount; i++) {
+                        GAPI::Vertex* v = &vBuffer[i];
+                        v->light.x = (v->light.x * v->color.x) >> 8;
+                        v->light.y = (v->light.x * v->color.y) >> 8;
+                        v->light.z = (v->light.x * v->color.z) >> 8;
+                    }
+#endif
                 } else {
                     glBindBuffer(GL_ARRAY_BUFFER, Core::active.vBuffer = ID[1]);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, vCount * sizeof(GAPI::Vertex), vertices);
@@ -1704,7 +1712,9 @@ namespace GAPI {
 
     void updateLights(vec4 *lightPos, vec4 *lightColor, int count) {
     #ifdef FFP
-        int lightsCount = 0;
+
+   /*   
+    int lightsCount = 0;
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -1742,6 +1752,7 @@ namespace GAPI {
             glDisable(GL_COLOR_MATERIAL);
             glDisable(GL_LIGHTING);
         }
+        */
     #else
         if (Core::active.shader) {
             Core::active.shader->setParam(uLightColor, lightColor[0], count);
