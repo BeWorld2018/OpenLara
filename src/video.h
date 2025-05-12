@@ -412,7 +412,10 @@ struct Video {
             memcpy(&flags, data + 0, 4);
             memcpy(&size,  data + 4, 4);
             data += 8;
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            size = swap32(size);
+            flags = swap32(flags);
+#endif
             curVideoPos += size;
 
         // skip unchanged frame
@@ -423,9 +426,11 @@ struct Video {
 
         // read data into bit stream
             size -= (sizeof(flags) + sizeof(size));
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            BitStream bs(data, size, false);
+#else
             BitStream bs(data, size);
-
+#endif
         // read codebook changes
             for (int i = 0; i < 3; i++) {
                 if (flags & (1 << (17 + i))) {
@@ -573,8 +578,12 @@ struct Video {
 
             Chunk &chunk = chunks[curVideoChunk];
             curVideoPos = chunk.videoSize;
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            BitStream bs(data, chunk.videoSize, false);
+#else
             BitStream bs(data, chunk.videoSize);
+#endif
+            
             bs.data += 16; // skip 16 bytes (frame size, version, gamma/linear chroma flags etc.)
 
             uint8 *lumaPtr = lumaFrame;
@@ -1215,8 +1224,11 @@ struct Video {
 
             VideoChunk *chunk = videoChunks + (curVideoChunk % MAX_CHUNKS);
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            BitStream bs(chunk->data + 8, chunk->size - 8, false); // make bitstream without frame header
+#else
             BitStream bs(chunk->data + 8, chunk->size - 8); // make bitstream without frame header
-
+#endif
             int32 qscale = chunk->qscale;
 
             int32 blocks[64 * 6]; // Cr, Cb, YTL, YTR, YBL, YBR
