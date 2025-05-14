@@ -419,7 +419,7 @@ void inputUpdate() {
 
 #ifndef _GAPI_GLES 
                 if (scancode == SDL_SCANCODE_RETURN) {
-                    if (isKeyPressed(SDL_SCANCODE_LALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
+                    if (isKeyPressed(SDL_SCANCODE_RALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
                         toggleFullscreen();
                     }
                 }
@@ -642,16 +642,16 @@ int main(int argc, char **argv) {
     SDL_ShowCursor(SDL_DISABLE);
 
     const char *home;
-	#ifdef __MORPHOS__
+#ifdef __MORPHOS__
 	home="PROGDIR:";
 	strcat(cacheDir, home);
     strcat(cacheDir, ".openlara/");
-	#else
+#else
     if (!(home = getenv("HOME")))
         home = getpwuid(getuid())->pw_dir;
 	   strcat(cacheDir, home);
     strcat(cacheDir, "/.openlara/");
-	#endif
+#endif
 
     struct stat st = {0};
     if (stat(cacheDir, &st) == -1 && mkdir(cacheDir, 0777) == -1)

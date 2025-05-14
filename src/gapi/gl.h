@@ -63,6 +63,13 @@
         #include <GLES2/gl2ext.h>
     #endif
 
+#elif defined(__SDL3__) 
+    #include <SDL3/SDL.h>
+    #include <GL/gl.h>
+    // #include <SDL3/SDL_opengl.h>
+    #include <SDL3/SDL_opengl_glext.h>
+   // #define GL_HALF_FLOAT   GL_HALF_FLOAT_ARB
+
 #elif defined(__SDL2__) 
     #include <SDL2/SDL.h>
 
@@ -631,7 +638,7 @@ namespace GAPI {
                 strcat(defines, "#define VERT_CAUSTICS\n");
             #endif
 
-            #if defined(_OS_RPI) || defined(_OS_CLOVER) || defined(_OS_GCW0) || (defined (__SDL2__) && defined(_GAPI_GLES))
+            #if defined(_OS_RPI) || defined(_OS_CLOVER) || defined(_OS_GCW0) || defined (__SDL3__) || (defined (__SDL2__) && defined(_GAPI_GLES))
                 strcat(defines, "#define OPT_VLIGHTPROJ\n");
                 strcat(defines, "#define OPT_VLIGHTVEC\n");
                 strcat(defines, "#define OPT_SHADOW_ONETAP\n");
@@ -1300,7 +1307,7 @@ namespace GAPI {
         #else
             #if defined(_GAPI_GLES) && !defined(_GAPI_GLES2)
                 int GLES_VERSION = 1;
-                #if defined(__SDL2__)
+                #if defined(__SDL2__) || defined(__SDL3__) 
                     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &GLES_VERSION);
                 #else
                     #if defined(_OS_RPI) || defined(_OS_CLOVER) || defined(_OS_GCW0)
@@ -1594,11 +1601,11 @@ namespace GAPI {
             if (color) discard[count++] = Core::active.target ? GL_COLOR_ATTACHMENT0 : GL_COLOR_EXT;
             if (depth) discard[count++] = Core::active.target ? GL_DEPTH_ATTACHMENT  : GL_DEPTH_EXT;
             if (count) {
-                #if defined(_OS_ANDROID) || (defined(__SDL2__) && !defined(_GAPI_GLES2))
+                #if defined(_OS_ANDROID) || defined(__SDL3__) || (defined(__SDL2__) && !defined(_GAPI_GLES2))
                    /* glInvalidateBuffer() is the GLES3 version of glDiscardFramebufferEXT(), also
                       available on Android. Not available in any GLES2 implementation, this is GLES3 stuff.*/
                     glInvalidateFramebuffer(GL_FRAMEBUFFER, count, discard);
-                #elif !defined(_OS_WEB) || (defined(__SDL2__) && defined(_GAPI_GLES2))
+                #elif !defined(_OS_WEB) || defined(__SDL3__) || (defined(__SDL2__) && defined(_GAPI_GLES2))
                     /* glDiscardFramebufferEXT() is available even in GLES2 MESA implementations,
                        but we have to get the extension function pointer address to use it.
                        Not available in GLES3, which is SDL2 default GLES version. */
@@ -1622,7 +1629,7 @@ namespace GAPI {
             if (wglSwapIntervalEXT) wglSwapIntervalEXT(enable ? 1 : 0);
         #elif _OS_LINUX
             if (glXSwapIntervalSGI) glXSwapIntervalSGI(enable ? 1 : 0);
-        #elif defined(__SDL2__)
+        #elif defined(__SDL2__) || defined(__SDL3__)
             SDL_GL_SetSwapInterval(enable ? 1 : 0);
         #elif defined(_OS_RPI) || defined(_OS_CLOVER) || defined(_OS_SWITCH)
             eglSwapInterval(display, enable ? 1 : 0);
