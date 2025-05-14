@@ -1096,8 +1096,8 @@ namespace GAPI {
                     for (int i = 0; i < vCount; i++) {
                         GAPI::Vertex* v = &vBuffer[i];
                         v->light.x = (v->light.x * v->color.x) >> 8;
-                        v->light.y = (v->light.x * v->color.y) >> 8;
-                        v->light.z = (v->light.x * v->color.z) >> 8;
+                        v->light.y = (v->light.y * v->color.y) >> 8;
+                        v->light.z = (v->light.z * v->color.z) >> 8;
                     }
 #endif
                 } else {
@@ -1781,7 +1781,37 @@ namespace GAPI {
         if (Core::active.shader) {
             Core::active.shader->validate();
         }
-
+#ifdef FFP
+ /*       float ambient = Core::active.material.y;
+        if (ambient != 1.0f) {
+            glBegin(GL_TRIANGLES);
+            for (int i = 0; i < range.iCount; i++) {
+                GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
+                glTexCoord2s(v->texCoord.x, v->texCoord.y);
+                glNormal3s(v->normal.x, v->normal.y, v->normal.z);
+                glVertex3s(v->coord.x, v->coord.y, v->coord.z);
+                //glColor4ub((float)v->light.x * ambient, (float)v->light.y * ambient, (float)v->light.z * ambient, v->light.w);
+                vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
+                color *= ambient;
+                vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
+                vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
+                for (int j = 0; j < MAX_LIGHTS; j++) {
+                    if (lightColor[j].w >= 1.0f) {
+                        continue;
+                    }
+                    vec3 dir = (lightPos[j].xyz() - coord) * lightColor[j].w;
+                    float att = dir.length2();
+                    float lum = normal.dot(dir / sqrtf(att));
+                    vec3 light = lightColor[j].xyz();
+                    light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
+                    color += light;
+                }
+                glColor4f(color.x, color.y, color.z, v->light.w / 255.0f);
+            }
+            glEnd();
+            return;
+        }*/
+#endif
         glDrawElements(GL_TRIANGLES, range.iCount, sizeof(Index) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, mesh->iBuffer + range.iStart);
     }
 

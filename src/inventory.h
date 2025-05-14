@@ -1798,6 +1798,10 @@ struct Inventory {
         vertices[10].light = 
         vertices[11].light = ubyte4(0, 0, 0, alpha);
 
+        for (int i = 0; i < 12; i++) {
+            vertices[i].color = ubyte4(255, 255, 255, 255);
+        }
+
         short2 t0(short(tx * 32767), short(ty * 32767));
         short2 t1(t0.x + short(ax * 32767), t0.y + short(ay * 32767));
 
