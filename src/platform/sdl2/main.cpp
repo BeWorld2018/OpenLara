@@ -131,7 +131,14 @@ void osJoyVibrate(int index, float L, float R) {
     if (index >= sdl_numcontrollers)
         return;
     if (SDL_IsGameController(index)) {
-        SDL_GameControllerRumble(sdl_controllers[index], L*0xFFFF, R*0xFFFF, 500);
+#ifdef __MORPHOS__
+		//SDL_Log("L=%f R=%f\n", L, R);
+		L = L * 2;
+		R = R * 2;
+		if (L > 1.0f) L = 1.0f;
+		if (R > 1.0f) R = 1.0f;
+#endif
+        SDL_GameControllerRumble(sdl_controllers[index], L*0xFFFF, R*0xFFFF, 600);
     } else {
         SDL_HapticRumblePlay(sdl_haptics[index], L+R, 500);
     }
@@ -160,6 +167,8 @@ void resize_texture(int w, int h)
     if (texture == NULL) {
         printf("Unable to create the texture\n");
     }
+#else
+		SDL_GL_SwapWindow(sdl_window);
 #endif
 
 }
@@ -398,7 +407,7 @@ void inputUpdate() {
     while (SDL_PollEvent(&event) == 1) { // while there are still events to be processed
         switch (event.type) 
 		{	
-		
+#ifdef _GAPI_SW
 			case SDL_WINDOWEVENT_RESIZED:
 				int w, h;
 				w = event.window.data1;
@@ -407,6 +416,7 @@ void inputUpdate() {
 				resize_texture(w, h);
 
 				break;
+#endif
             case SDL_QUIT:
                 Core::isQuit = true;
 				break;
