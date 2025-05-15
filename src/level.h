@@ -1839,6 +1839,7 @@ struct Level : IGame {
             atlasObjects =
             atlasSprites =
             atlasGlyphs  = new Texture(tiles, level.tilesCount);
+            atlasRooms->setFilterQuality(Core::settings.detail.filter);
 
             for (int i = 0; i < level.tilesCount; i++)
                 delete[] tiles[i].data;

@@ -48,7 +48,7 @@ struct Texture : GAPI::Texture {
 
                 ASSERT(tilesCount < COUNT(this->tiles));
                 for (int i = 0; i < tilesCount; i++)
-                    this->tiles[i] = new Texture(tiles[i].width, tiles[i].height, 1, FMT_RGBA, OPT_NEAREST, tiles[i].data);
+                    this->tiles[i] = new Texture(tiles[i].width, tiles[i].height, 1, FMT_RGBA, /*OPT_NEAREST*/0, tiles[i].data);
             }
         #endif
 
@@ -60,6 +60,20 @@ struct Texture : GAPI::Texture {
         #else
             tiles[tile]->bind(0);
         #endif
+        }
+
+        void setFilterQuality(int value) {
+            for (int i = 0; i < COUNT(tiles); i++) {
+                if (tiles[i]) {
+                    tiles[i]->setFilterQuality(value);
+                }
+            }
+
+            if (this->opt & OPT_PROXY) {
+                return;
+            }
+
+            GAPI::Texture::setFilterQuality(value);
         }
     #endif
 
