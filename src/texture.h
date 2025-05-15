@@ -449,10 +449,8 @@ struct Texture : GAPI::Texture {
     // read chunks
         while (stream.pos < stream.size) {
             uint32 chunkSize, chunkName;
-           //chunkSize = swap32(stream.read(chunkSize));
             chunkSize = stream.readBE32();
-            stream.read(chunkName);
-
+            chunkName = stream.readLE32();
             if (chunkName == FOURCC("IHDR")) { // Image Header
                 width  = stream.readBE32();
                 height = stream.readBE32();
