@@ -1795,11 +1795,13 @@ namespace GAPI {
                 color *= ambient;
                 vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
                 vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
+                mat4 mModelInv = mModel.inverseOrtho();
                 for (int j = 0; j < MAX_LIGHTS; j++) {
                     if (lightColor[j].w >= 1.0f) {
                         continue;
                     }
-                    vec3 dir = (lightPos[j].xyz() - coord) * lightColor[j].w;
+                    vec3 pos = mModelInv * lightPos[j].xyz();
+                    vec3 dir = (pos - coord) * lightColor[j].w;
                     float att = dir.length2();
                     float lum = normal.dot(dir / sqrtf(att));
                     vec3 light = lightColor[j].xyz();

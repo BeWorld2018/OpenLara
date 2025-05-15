@@ -36,7 +36,9 @@ AppState *as;
 
 // Some functions
 void dump(const char *fileName) {
-	
+#if defined(_GAPI_SW)
+//TODO
+#else	
     int width  = Core::width;
 	int height = Core::height;
 	int size = width * height * 4;
@@ -55,6 +57,7 @@ void dump(const char *fileName) {
 	Texture::SaveBMP(fileName, flipped, width, height);
 	delete[] flipped;
 	delete[] data;
+#endif
 }
 
 void toggleFullscreen () {
@@ -423,6 +426,23 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         contentDir[contentDirLen+1] = '\0';
     }
 
+    const char *home;
+#ifdef __MORPHOS__
+	home="PROGDIR:";
+	strcat(cacheDir, home);
+    strcat(cacheDir, ".openlara/");
+#else
+    if (!(home = getenv("HOME")))
+        home = getpwuid(getuid())->pw_dir;
+	   strcat(cacheDir, home);
+    strcat(cacheDir, "/.openlara/");
+#endif
+
+    struct stat st = {0};
+    if (stat(cacheDir, &st) == -1 && mkdir(cacheDir, 0777) == -1)
+        cacheDir[0] = 0;
+    strcpy(saveDir, cacheDir);
+	
     timeval t;
     gettimeofday(&t, NULL);
     startTime = t.tv_sec;
@@ -459,22 +479,22 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 	Core::width  = w;
 	Core::height = h;
 
-#if !defined(_GAPI_SW)
-    as->context = SDL_GL_CreateContext(as->window);
-#endif
-	SDL_HideCursor();
 	
 #if defined(_GAPI_SW)
     as->surface = SDL_GetWindowSurface(as->window);
     if (as->surface == NULL) {
         LOG("Couldn't get surface: %s", SDL_GetError());   
-	return SDL_APP_FAILURE;
+		return SDL_APP_FAILURE;
     }
     SDL_LockSurface(as->surface);
 
     GAPI::swColor = (unsigned int*)as->surface->pixels;
     GAPI::resize();
+#else
+	as->context = SDL_GL_CreateContext(as->window);	
 #endif
+
+	SDL_HideCursor();
 
     if (!sndInit()) {
 	//return SDL_APP_FAILURE;
@@ -501,15 +521,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			return SDL_APP_SUCCESS;    
 		case SDL_EVENT_KEY_DOWN: {
 			int scancode = event->key.scancode;
-			key = codeToInputKey(scancode);
-			if (key != ikNone) {
-	            Input::setDown(key, 1);
-	        } 
-	        if (scancode == SDL_SCANCODE_RETURN &&
-               (event->key.mod & SDL_KMOD_ALT )) {
+			if (event->key.mod & SDL_KMOD_ALT ) {
+				if (scancode == SDL_SCANCODE_RETURN)
 	               toggleFullscreen();
 	        } else if (scancode == SDL_SCANCODE_F1) {
 	            dump("screenshot");
+	        } else {
+				key = codeToInputKey(scancode);
+				if (key != ikNone) {
+					Input::setDown(key, 1);
+				} 
 	        }
 			break;
 		}	
@@ -579,25 +600,28 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     
     Game::deinit();
     
-    //if (appstate != NULL) {
-        //AppState *as = (AppState *)appstate;
+    if (appstate != NULL) {
+        as = (AppState *)appstate;
 #if defined(_GAPI_SW)
         SDL_DestroyRenderer(as->renderer);
 #endif
-        SDL_DestroyWindow(as->window);
+        
 #if defined(_GAPI_SW)
 		SDL_DestroySurface(as->surface);
 #else
 		SDL_GL_DestroyContext(as->context);
 #endif
+
+		SDL_DestroyWindow(as->window);
+
         SDL_free(as);
-    //}
+    }
     
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
 
-	//AppState *as = (AppState *)appstate;
+	as = (AppState *)appstate;
 	
 	if(Core::isQuit) {
 		return SDL_APP_SUCCESS;
@@ -606,9 +630,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             Game::render();
 			Core::waitVBlank();
 #if defined(_GAPI_SW)
-            	SDL_UpdateWindowSurface(as->window);
+            SDL_UpdateWindowSurface(as->window);
 #else
-            	SDL_GL_SwapWindow(as->window);
+            SDL_GL_SwapWindow(as->window);
 #endif
         }
 

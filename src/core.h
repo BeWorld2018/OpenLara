@@ -35,12 +35,13 @@
     #undef OS_PTHREAD_MT
 #elif WIN32
     #define _OS_WIN      1
-    //#define _GAPI_GL     1
-
+    #define _GAPI_GL     1
+   // #define FFP 1
+    //#define SPLIT_BY_TILE
     //#define _GAPI_D3D9   1
     //#define _GAPI_D3D11  1
     //#define _GAPI_VULKAN 1
-     #define _GAPI_SW     1
+     //#define _GAPI_SW     1
     //#define _NAPI_SOCKET
 
     #include <windows.h>
@@ -63,7 +64,7 @@
     #define INV_QUALITY
     #define INV_STEREO
 #elif __SDL2__
-   //#define _GAPI_SW    1
+    //#define _GAPI_SW    1
     #define _GAPI_GL   1
     #define FFP 1
     #ifdef SDL2_GLES

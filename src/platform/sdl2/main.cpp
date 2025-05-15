@@ -10,7 +10,9 @@
 
 #include "game.h"
 void dump(const char *fileName) {
-	
+#if defined(_GAPI_SW)
+//TODO
+#else
     int width  = Core::width;
 	int height = Core::height;
 	int size = width * height * 4;
@@ -29,6 +31,7 @@ void dump(const char *fileName) {
 	Texture::SaveBMP(fileName, flipped, width, height);
 	delete[] flipped;
 	delete[] data;
+#endif
 }
 
 #define WND_TITLE    "OpenLara"
