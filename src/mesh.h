@@ -1283,7 +1283,7 @@ struct MeshBuilder {
             y0 = y1 = y;
         }
 
-    #if !defined(MERGE_SPRITES) && defined(_GAPI_SW)
+#if !defined(MERGE_SPRITES) && defined(FFP)
         if (!expand) {
             vec3 pos = vec3(float(x), float(y), float(z));
             quad[0].coord = coordTransform(pos, vec3( float(sprite.l), float(-sprite.t), 1 ));
@@ -1291,7 +1291,7 @@ struct MeshBuilder {
             quad[2].coord = coordTransform(pos, vec3( float(sprite.r), float(-sprite.b), 1 ));
             quad[3].coord = coordTransform(pos, vec3( float(sprite.l), float(-sprite.b), 1 ));
         } else
-    #endif
+ #endif
         {
             quad[0].coord = short4( x0, y0, z, 1 );
             quad[1].coord = short4( x1, y0, z, 1 );
