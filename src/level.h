@@ -2478,6 +2478,10 @@ struct Level : IGame {
                     b.rot = quat(0, 0, 0, 1);
                 #endif
                 Core::setBasis(&b, 1);
+#ifdef FFP
+                Core::mModel.identity();
+                Core::mModel.setPos(Core::active.basis[0].pos);
+#endif
             }
 
             mesh->dynEnd();
