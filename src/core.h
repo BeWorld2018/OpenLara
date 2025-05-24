@@ -239,7 +239,9 @@
 #endif
 
 #ifdef FFP
-    #define SPLIT_BY_TILE
+    #if !defined(_GAPI_GL)
+        #define SPLIT_BY_TILE
+    #endif
     #if defined(_GAPI_GU)
         #define SPLIT_BY_CLUT
     #endif
