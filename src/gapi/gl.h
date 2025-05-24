@@ -1794,7 +1794,7 @@ namespace GAPI {
             Core::active.shader->validate();
         }
 #ifdef FFP
- /*       float ambient = Core::active.material.y;
+        float ambient = Core::active.material.y;
         if (ambient != 1.0f) {
             glBegin(GL_TRIANGLES);
             for (int i = 0; i < range.iCount; i++) {
@@ -1805,6 +1805,7 @@ namespace GAPI {
                 //glColor4ub((float)v->light.x * ambient, (float)v->light.y * ambient, (float)v->light.z * ambient, v->light.w);
                 vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
                 color *= ambient;
+#if 0 // TODO
                 vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
                 vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
                 mat4 mModelInv = mModel.inverseOrtho();
@@ -1820,11 +1821,12 @@ namespace GAPI {
                     light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
                     color += light;
                 }
-                glColor4f(color.x, color.y, color.z, v->light.w / 255.0f);
+#endif
+                glColor4f(min(1.0f, color.x), min(1.0f, color.y), min(1.0f, color.z), v->light.w / 255.0f);
             }
             glEnd();
             return;
-        }*/
+        }
 #endif
         glDrawElements(GL_TRIANGLES, range.iCount, sizeof(Index) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, mesh->iBuffer + range.iStart);
     }
