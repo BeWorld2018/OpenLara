@@ -1100,14 +1100,6 @@ namespace GAPI {
             if (vertices && vCount) {
                 if (vBuffer) {
                     memcpy(vBuffer, vertices, vCount * sizeof(GAPI::Vertex));
-#ifdef FFP
-                    for (int i = 0; i < vCount; i++) {
-                        GAPI::Vertex* v = &vBuffer[i];
-                        v->light.x = (v->light.x * v->color.x) >> 8;
-                        v->light.y = (v->light.y * v->color.y) >> 8;
-                        v->light.z = (v->light.z * v->color.z) >> 8;
-                    }
-#endif
                 } else {
                     glBindBuffer(GL_ARRAY_BUFFER, Core::active.vBuffer = ID[1]);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, vCount * sizeof(GAPI::Vertex), vertices);
@@ -1577,6 +1569,8 @@ namespace GAPI {
         glRenderbufferStorage(GL_RENDERBUFFER, depth ? GL_DEPTH_COMPONENT16 : GL_RGB565, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         return items.push(item);
+#else
+        return 0;
 #endif
     }
 
@@ -1795,40 +1789,43 @@ namespace GAPI {
         }
 #ifdef FFP
         float ambient = Core::active.material.y;
-        if (ambient != 1.0f) {
-            glBegin(GL_TRIANGLES);
-            for (int i = 0; i < range.iCount; i++) {
-                GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
-                glTexCoord2s(v->texCoord.x, v->texCoord.y);
-                glNormal3s(v->normal.x, v->normal.y, v->normal.z);
-                glVertex3s(v->coord.x, v->coord.y, v->coord.z);
-                //glColor4ub((float)v->light.x * ambient, (float)v->light.y * ambient, (float)v->light.z * ambient, v->light.w);
-                vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
-                color *= ambient;
-#if 0 // TODO
-                vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
-                vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
-                mat4 mModelInv = mModel.inverseOrtho();
-                for (int j = 0; j < MAX_LIGHTS; j++) {
-                    if (lightColor[j].w >= 1.0f) {
-                        continue;
-                    }
-                    vec3 pos = mModelInv * lightPos[j].xyz();
-                    vec3 dir = (pos - coord) * lightColor[j].w;
-                    float att = dir.length2();
-                    float lum = normal.dot(dir / sqrtf(att));
-                    vec3 light = lightColor[j].xyz();
-                    light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
-                    color += light;
+
+        glBegin(GL_TRIANGLES);
+			
+        for (int i = 0; i < range.iCount; i++) {
+            GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
+            vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
+            color *= ambient;
+            vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
+            vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
+            mat4 mModelInv = mModel.inverseOrtho();
+            for (int j = 0; j < MAX_LIGHTS; j++) {
+                if (lightColor[j].w >= 1.0f) {
+                    continue;
                 }
-#endif
-                glColor4f(min(1.0f, color.x), min(1.0f, color.y), min(1.0f, color.z), v->light.w / 255.0f);
+                vec3 pos = mModelInv * lightPos[j].xyz();
+                vec3 dir = (pos - coord) * lightColor[j].w;
+                float att = dir.length2();
+                float lum = normal.dot(dir / sqrtf(att));
+                vec3 light = lightColor[j].xyz();
+                light *= max(0.0f, lum) * max(0.0f, 1.0f - att) * 0.5f;
+                color += light;
             }
-            glEnd();
-            return;
+               
+            color.x *= v->color.x;
+			color.y *= v->color.y;
+			color.z *= v->color.z;
+            glColor4ub(min(255, (int)color.x), min(255, (int)color.y), min(255, (int)color.z), v->light.w);
+            glTexCoord2s(v->texCoord.x, v->texCoord.y);
+            glNormal3s(v->normal.x, v->normal.y, v->normal.z);
+            glVertex3s(v->coord.x, v->coord.y, v->coord.z);
         }
-#endif
+        glEnd();
+        return;
+#else
+     
         glDrawElements(GL_TRIANGLES, range.iCount, sizeof(Index) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, mesh->iBuffer + range.iStart);
+#endif
     }
 
     vec4 copyPixel(int x, int y) {
