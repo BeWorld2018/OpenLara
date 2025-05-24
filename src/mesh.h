@@ -1355,6 +1355,10 @@ struct MeshBuilder {
             else
                 v.light.value = color;
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            v.light.value = swap32(v.light.value);
+#endif
+
             short2 uv = tile.texCoordAtlas[i];
 
             v.texCoord = short4( uv.x, uv.y, 32767, 32767 );
@@ -1407,6 +1411,9 @@ struct MeshBuilder {
             Vertex &v = vertices[vCount + i];
             v.normal      = short4( 0, 0, 0, 0 );
             v.light.value = color1;
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            v.light.value = swap32(v.light.value);
+#endif
             v.texCoord    = uv;
         }
 
@@ -1427,6 +1434,9 @@ struct MeshBuilder {
             Vertex &v = vertices[vCount + i];
             v.normal      = short4( 0, 0, 0, 0 );
             v.light.value = color2;
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            v.light.value = swap32(v.light.value);
+#endif
             v.texCoord    = uv;
         }
 
