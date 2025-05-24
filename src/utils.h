@@ -17,7 +17,7 @@
 //#define TEST_SLOW_FIO
 
 #ifdef _DEBUG
-    #if defined(_OS_WP8)
+    #if defined(_OS_WP8) || defined(__MORPHOS__)
         #define debugBreak() /* TODO */
     #elif defined(_OS_LINUX) || defined(_OS_RPI) || defined(_OS_CLOVER)
         #define debugBreak() raise(SIGTRAP);

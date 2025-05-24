@@ -435,7 +435,9 @@
         #endif
 
         Marker(const char *title) {
+#ifndef __MORPHOS__
             if (Core::support.profMarker) glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, title);
+#endif
             #ifdef USE_CV_MARKERS
                 marker_series *&s = series[seriesIndex];
                 if (s == NULL) {
@@ -449,7 +451,9 @@
         }
 
         ~Marker() {
+#ifndef __MORPHOS__
             if (Core::support.profMarker) glPopDebugGroup();
+#endif
             #ifdef USE_CV_MARKERS
                 delete cvSpan;
                 seriesIndex--;
@@ -457,7 +461,9 @@
         }
 
         static void setLabel(GLenum id, GLuint name, const char *label) {
+#ifndef __MORPHOS__
             if (Core::support.profMarker) glObjectLabel(id, name, -1, label);
+#endif
         }
     };
 
@@ -944,9 +950,11 @@ namespace GAPI {
 
         void generateMipMap() {
             bind(0);
+#ifndef FFP
             if (glGenerateMipmap) {
                 glGenerateMipmap(target);
             }
+#endif
             if ((opt & (OPT_VOLUME | OPT_CUBEMAP | OPT_NEAREST)) == 0 && (Core::support.maxAniso > 0)) {
                 glTexParameteri(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, min(int(Core::support.maxAniso), 8));
                 if (Core::support.texMaxLevel) {
@@ -1545,6 +1553,7 @@ namespace GAPI {
     }
 
     int cacheRenderTarget(bool depth, int width, int height) {
+#ifndef FFP
         Array<RenderTargetCacheItem> &items = rtCache[depth];
 
         for (int i = 0; i < items.length; i++)
@@ -1568,9 +1577,11 @@ namespace GAPI {
         glRenderbufferStorage(GL_RENDERBUFFER, depth ? GL_DEPTH_COMPONENT16 : GL_RGB565, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         return items.push(item);
+#endif
     }
 
     void bindTarget(Texture *target, int face) {
+#ifndef FFP
         if (!target) { // may be a null
             glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
         } else {
@@ -1591,6 +1602,7 @@ namespace GAPI {
                 LOG("status: 0x%04X\n", (int)status);
             }
         }
+#endif
     }
 
     void discardTarget(bool color, bool depth) {

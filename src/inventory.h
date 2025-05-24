@@ -1658,7 +1658,9 @@ struct Inventory {
                 case TR::Entity::INV_MAP       :
                     UI::textOut(vec2(0, 240), STR_EMPTY, UI::aCenter, UI::width);
                     break;
-                default : ;
+                default : 
+                    break;
+
             }
         }
     }
@@ -2085,7 +2087,7 @@ struct Inventory {
             const char *bSelect = STR[STR_KEY_FIRST + ikEnter];
             const char *bBack   = STR[STR_KEY_FIRST + Core::settings.controls[playerIndex].keys[cInventory].key];
 
-            #if defined(_OS_SWITCH) || defined(_OS_3DS) || defined(_OS_GCW0) || defined(_OS_XBOX) || defined(_OS_XB1)
+            #if defined(_OS_SWITCH) || defined(_OS_3DS) || defined(_OS_GCW0) || defined(_OS_XBOX) || defined(_OS_XB1) || defined(__SDL3__) || defined(__SDL2__)
                 bSelect = "A";
                 bBack   = "B";
             #endif

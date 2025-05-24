@@ -6590,8 +6590,7 @@ namespace TR {
             spriteSequences = spriteSequencesCount ? new SpriteSequence[spriteSequencesCount] : NULL;
             for (int i = 0; i < spriteSequencesCount; i++) {
                 SpriteSequence &s = spriteSequences[i];
-                uint16 type;
-                type = stream.readLE16();
+                uint16 type = stream.readLE16();
                 s.type = Entity::remap(version, Entity::Type(type));
                 s.unused = stream.readLE16();
                 s.sCount = stream.readLE16();
