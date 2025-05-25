@@ -274,10 +274,10 @@ namespace Sound {
             if (bits == 16) {
                 int16 value;
                 if (channels == 2) {
-                    frame.L = stream->read(value);
-                    frame.R = stream->read(value);
+                    frame.L = stream->readLE16();
+                    frame.R = stream->readLE16();
                 } else
-                    frame.L = frame.R = stream->read(value);
+                    frame.L = frame.R = stream->readLE16();
             } else if (bits == 8 || bits == -8) {
 
                 if (bits > 0) {
