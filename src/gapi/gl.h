@@ -1810,7 +1810,7 @@ namespace GAPI {
                 light *= max(0.0f, lum) * max(0.0f, 1.0f - att) * 0.5f;
                 color += light;
             }
-            if (Core::params.y < 1000000.0f) { // NO_WATER_HEIGHT
+            if (Core::params.y < 1000000.0f && Core::params.y > 0) { // NO_WATER_HEIGHT
                 color *= 0.5f + fabsf(sinf(coord.dot(vec3(1.0f / 1024.0f)) + Core::params.x)) * 0.75f;
                 color *= vec3(0.6f, 0.9f, 0.9f);
             }
