@@ -1501,20 +1501,33 @@ struct Color24 { // RGB888
 
 union Color16 { // RGBA5551
 
-    struct {
-        uint16 b : 5;
-        uint16 g : 5;
-        uint16 r : 5;
-        uint16 a : 1;
-    };
-
     uint16 value;
 
-    Color16() {}
+    Color16() : value(0) {}
     Color16(uint16 value) : value(value) {}
 
-    operator Color24() const { return Color24((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2)); }
-    operator Color32() const { return Color32((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), -a); }
+    uint8 r() const { return (value >> 10) & 0x1F; }
+    uint8 g() const { return (value >> 5) & 0x1F; }
+    uint8 b() const { return value & 0x1F; }
+    uint8 a() const { return (value >> 15) & 0x01; }
+
+    operator Color24() const {
+        return Color24(
+            (r() << 3) | (r() >> 2),
+            (g() << 3) | (g() >> 2),
+            (b() << 3) | (b() >> 2)
+        );
+    }
+
+    operator Color32() const {
+        return Color32(
+            (r() << 3) | (r() >> 2),
+            (g() << 3) | (g() >> 2),
+            (b() << 3) | (b() >> 2),
+            a() ? 255 : 0
+        );
+    }
+
 };
 
 union ColorCLUT { // RGBA5551

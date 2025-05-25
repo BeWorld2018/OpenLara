@@ -1446,7 +1446,15 @@ struct Level : IGame {
                         }
 
                         for (int i = 0; i < (mm.z + 1) * (mm.w + 1); i++) {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+                            uint32 rgba = CommonTexData[id][i];
+                            Color32 color(rgba & 255, (rgba >> 8) & 255, (rgba >> 16) & 255, (rgba >> 24) & 255);
+                            src[i] = color.value;
+#else
                             src[i] = ((Color32*)&CommonTexData[id])[i];
+
+#endif
+
                         }
                         break;
                     default : return;
