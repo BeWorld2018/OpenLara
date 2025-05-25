@@ -105,7 +105,6 @@ void osJoyVibrate(int index, float L, float R) {
 #endif
 
     if (SDL_IsGamepad(index)) {
-		SDL_Log("SDL_RumbleGamepad !\n");
         SDL_RumbleGamepad(sdl_gamepads[index], L*0xFFFF, R*0xFFFF, 500);
 	}
 }
@@ -518,77 +517,75 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     {
 		case SDL_EVENT_QUIT:
 			Core::isQuit = true;
-			return SDL_APP_SUCCESS;    
+			return SDL_APP_SUCCESS;   
+		
 		case SDL_EVENT_KEY_DOWN: {
-			int scancode = event->key.scancode;
-			if (event->key.mod & SDL_KMOD_ALT ) {
-				if (scancode == SDL_SCANCODE_RETURN)
-	               toggleFullscreen();
-	        } else if (scancode == SDL_SCANCODE_F1) {
-	            dump("screenshot");
-	        } else {
-				key = codeToInputKey(scancode);
-				if (key != ikNone) {
-					Input::setDown(key, 1);
-				} 
-	        }
-			break;
-		}	
-		case SDL_EVENT_KEY_UP: {
 			int scancode = event->key.scancode;
 			key = codeToInputKey(scancode);
 			if (key != ikNone) {
-	        	Input::setDown(key, 0);
+				Input::setDown(key, 1);
+			} 
+				
+			if (event->key.mod & SDL_KMOD_ALT && scancode == SDL_SCANCODE_RETURN) {
+	            toggleFullscreen();
+			}
+	        
+			if (scancode == SDL_SCANCODE_F1) {
+	            dump("screenshot");		
 	        }
 			break;
 		}
+			
+		case SDL_EVENT_KEY_UP:	
+		{
+			int scancode = event->key.scancode;
+			key = codeToInputKey(scancode);
+			if (key != ikNone) {
+				Input::setDown(key, 0);
+			} 
+		}
 		// Joystick reading using the modern SDL GameController interface
-            case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
-				
-                joyIndex = joyGetIndex(event->gbutton.which);
-				//SDL_Log("SDL_EVENT_GAMEPAD_BUTTON_DOWN joyIndex=%d event->gbutton.button=%d", joyIndex, event->gbutton.button);
-                JoyKey key = controllerCodeToJoyKey(event->gbutton.button);
-                Input::setJoyDown(joyIndex, key, 1);
-                break;
-            }
-            case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-				
-                joyIndex = joyGetIndex(event->gbutton.which);
-				//SDL_Log("SDL_EVENT_GAMEPAD_BUTTON_UP joyIndex=%d event->gbutton.button=%d", joyIndex, event->gbutton.button);
-                JoyKey key = controllerCodeToJoyKey(event->gbutton.button);
-                Input::setJoyDown(joyIndex, key, 0);
-                break;
-            }
-			case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
-                joyIndex = joyGetIndex(event->gaxis.which);
-                switch (event->gaxis.axis) {
-                    case SDL_GAMEPAD_AXIS_LEFTX:
-                        joyL.x = joyAxisValue(event->gaxis.value);
-                        break;
-                    case SDL_GAMEPAD_AXIS_LEFTY:
-                        joyL.y = joyAxisValue(event->gaxis.value);
-                        break;
-                    case SDL_GAMEPAD_AXIS_RIGHTX:
-                        joyR.x = joyAxisValue(event->gaxis.value);
-                        break;
-						
-                    case SDL_GAMEPAD_AXIS_RIGHTY:
-                        joyR.y = joyAxisValue(event->gaxis.value);
-                        break;
-                }
-                Input::setJoyPos(joyIndex, jkL, joyDir(joyL));
-                Input::setJoyPos(joyIndex, jkR, joyDir(joyR));
-             
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
+			joyIndex = joyGetIndex(event->gbutton.which);
+			JoyKey key = controllerCodeToJoyKey(event->gbutton.button);
+			Input::setJoyDown(joyIndex, key, 1);
+			break;
+		}
+		case SDL_EVENT_GAMEPAD_BUTTON_UP: {				
+			joyIndex = joyGetIndex(event->gbutton.which);
+			JoyKey key = controllerCodeToJoyKey(event->gbutton.button);
+			Input::setJoyDown(joyIndex, key, 0);
+			break;
+		}
+		case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
+			joyIndex = joyGetIndex(event->gaxis.which);
+			switch (event->gaxis.axis) {
+				case SDL_GAMEPAD_AXIS_LEFTX:
+					joyL.x = joyAxisValue(event->gaxis.value);
+					break;
+				case SDL_GAMEPAD_AXIS_LEFTY:
+					joyL.y = joyAxisValue(event->gaxis.value);
+					break;
+				case SDL_GAMEPAD_AXIS_RIGHTX:
+					joyR.x = joyAxisValue(event->gaxis.value);
+					break;
+					
+				case SDL_GAMEPAD_AXIS_RIGHTY:
+					joyR.y = joyAxisValue(event->gaxis.value);
+					break;
+			}
+			Input::setJoyPos(joyIndex, jkL, joyDir(joyL));
+			Input::setJoyPos(joyIndex, jkR, joyDir(joyR));
+			break;
+		}
+		case SDL_EVENT_GAMEPAD_ADDED: {
+			 joyAdd(event->gdevice.which);
 			 break;
-            }
-            case SDL_EVENT_GAMEPAD_ADDED: {
-                 joyAdd(event->gdevice.which);
-                 break;
-            }
-            case SDL_EVENT_GAMEPAD_REMOVED: {
-                joyRemove(event->gdevice.which);
-                break;
-            }
+		}
+		case SDL_EVENT_GAMEPAD_REMOVED: {
+			joyRemove(event->gdevice.which);
+			break;
+		}
     }
     return SDL_APP_CONTINUE;
     
