@@ -1791,7 +1791,6 @@ namespace GAPI {
         float ambient = Core::active.material.y;
 
         glBegin(GL_TRIANGLES);
-			
         for (int i = 0; i < range.iCount; i++) {
             GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
             vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
@@ -1811,17 +1810,19 @@ namespace GAPI {
                 light *= max(0.0f, lum) * max(0.0f, 1.0f - att) * 0.5f;
                 color += light;
             }
-               
+            if (Core::params.y < 1000000.0f) { // NO_WATER_HEIGHT
+                color *= 0.5f + fabsf(sinf(coord.dot(vec3(1.0f / 1024.0f)) + Core::params.x)) * 0.75f;
+                color *= vec3(0.6f, 0.9f, 0.9f);
+            }
             color.x *= v->color.x;
-			color.y *= v->color.y;
-			color.z *= v->color.z;
+            color.y *= v->color.y;
+            color.z *= v->color.z;
             glColor4ub(min(255, (int)color.x), min(255, (int)color.y), min(255, (int)color.z), v->light.w);
             glTexCoord2s(v->texCoord.x, v->texCoord.y);
             glNormal3s(v->normal.x, v->normal.y, v->normal.z);
             glVertex3s(v->coord.x, v->coord.y, v->coord.z);
         }
         glEnd();
-        return;
 #else
      
         glDrawElements(GL_TRIANGLES, range.iCount, sizeof(Index) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, mesh->iBuffer + range.iStart);
