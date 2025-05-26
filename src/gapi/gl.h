@@ -1807,7 +1807,7 @@ namespace GAPI {
                 float att = dir.length2();
                 float lum = normal.dot(dir / sqrtf(att));
                 vec3 light = lightColor[j].xyz();
-                light *= max(0.0f, lum) * max(0.0f, 1.0f - att) * 0.5f;
+                light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
                 color += light;
             }
             if (Core::params.y < 1000000.0f && Core::params.y > 0) { // NO_WATER_HEIGHT

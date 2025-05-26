@@ -767,10 +767,11 @@ namespace UI {
     }
 
     void setupInventoryShading(vec3 offset) {
+#ifndef FFP
         Core::mView.identity();
         Core::mProj = GAPI::perspective(1.0f, 1.0f, 1.0f, 2.0f, 0.0f);
         Core::mLightProj = Core::mProj * Core::mView;
-
+#endif
         game->setShader(Core::passCompose, Shader::ENTITY, false, false);
         Core::setMaterial(1.0f, 0.0f, 0.0f, 1.0f);
         Core::setFog(FOG_NONE);

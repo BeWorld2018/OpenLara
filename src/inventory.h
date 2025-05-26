@@ -1858,7 +1858,7 @@ struct Inventory {
         vertices[3].texCoord = short4(    0,     0, 0, 0);
 
         Texture *backTex = NULL;
-    #ifdef FFP
+    #if defined(FFP) && defined(_GAPI_SW)
         backTex = Core::blackTex;
 
         mat4 m;
