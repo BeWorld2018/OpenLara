@@ -65,10 +65,24 @@
 
 #elif defined(__SDL3__) 
     #include <SDL3/SDL.h>
-    #include <GL/gl.h>
-    // #include <SDL3/SDL_opengl.h>
+    #include <SDL3/SDL_opengl.h>
     #include <SDL3/SDL_opengl_glext.h>
-   // #define GL_HALF_FLOAT   GL_HALF_FLOAT_ARB
+    #ifdef __amigaos4__
+        #define glTexImage3D(...)
+        #define glPushDebugGroup(...)
+        #define glPopDebugGroup(...)
+        #define glObjectLabel(...)
+        #define glGenQueries(...)
+        #define glBeginQuery(...)
+        #define glEndQuery(...)
+        #define glGetQueryObjectiv(...)
+        #define glDeleteQueries(...)
+    #endif
+    #ifdef __MORPHOS__
+        #define glPushDebugGroup(...)
+        #define glPopDebugGroup(...)
+        #define glObjectLabel(...)
+    #endif
 
 #elif defined(__SDL2__) 
     #include <SDL2/SDL.h>
@@ -1501,7 +1515,7 @@ namespace GAPI {
     }
 
     void deinit() {
-        #ifndef FFP
+#ifndef FFP
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &FBO);
 
@@ -1512,7 +1526,7 @@ namespace GAPI {
             }
             rtCache[b].clear();
         }
-        #endif
+#endif
     }
 
     inline mat4::ProjRange getProjRange() {
