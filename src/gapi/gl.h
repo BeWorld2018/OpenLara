@@ -138,6 +138,22 @@
     #else // We want OpenGL on SDL2, not GLES
         #include <SDL2/SDL_opengl.h>
         #include <SDL2/SDL_opengl_glext.h>
+        #ifdef __amigaos4__
+            #define glTexImage3D(...)
+            #define glPushDebugGroup(...)
+            #define glPopDebugGroup(...)
+            #define glObjectLabel(...)
+            #define glGenQueries(...)
+            #define glBeginQuery(...)
+            #define glEndQuery(...)
+            #define glGetQueryObjectiv(...)
+            #define glDeleteQueries(...)
+        #endif
+        #ifdef __MORPHOS__
+            #define glPushDebugGroup(...)
+            #define glPopDebugGroup(...)
+            #define glObjectLabel(...)
+        #endif
     #endif
 
 #elif defined(_OS_PSC)
@@ -435,9 +451,7 @@
         #endif
 
         Marker(const char *title) {
-#ifndef __MORPHOS__
             if (Core::support.profMarker) glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, title);
-#endif
             #ifdef USE_CV_MARKERS
                 marker_series *&s = series[seriesIndex];
                 if (s == NULL) {
@@ -451,9 +465,7 @@
         }
 
         ~Marker() {
-#ifndef __MORPHOS__
             if (Core::support.profMarker) glPopDebugGroup();
-#endif
             #ifdef USE_CV_MARKERS
                 delete cvSpan;
                 seriesIndex--;
@@ -461,9 +473,7 @@
         }
 
         static void setLabel(GLenum id, GLuint name, const char *label) {
-#ifndef __MORPHOS__
             if (Core::support.profMarker) glObjectLabel(id, name, -1, label);
-#endif
         }
     };
 
@@ -1035,7 +1045,7 @@ namespace GAPI {
             this->iCount = iCount;
             this->vCount = vCount;
             this->aCount = aCount;
-#ifndef __MORPHOS__
+#ifndef FFP
             if (Core::support.VAO)
                 glBindVertexArray(Core::active.VAO = 0);
 #endif
@@ -1060,7 +1070,7 @@ namespace GAPI {
                 vBuffer = new GAPI::Vertex[vCount];
                 update(indices, iCount, vertices, vCount);
             }
-#ifndef __MORPHOS__   
+#ifndef FFP
             if (Core::support.VAO && aCount) {
                 VAO = new GLuint[aCount];
                 glGenVertexArrays(aCount, VAO);
@@ -1073,7 +1083,7 @@ namespace GAPI {
                 delete[] iBuffer;
                 delete[] vBuffer;
             } else {
-#ifndef __MORPHOS__
+#ifndef FFP
                 if (VAO) {
                     glDeleteVertexArrays(aCount, VAO);
                     delete[] VAO;
@@ -1085,7 +1095,7 @@ namespace GAPI {
 
         void update(Index *indices, int iCount, ::Vertex *vertices, int vCount) {
             ASSERT(sizeof(GAPI::Vertex) == sizeof(::Vertex));
-#ifndef __MORPHOS__
+#ifndef FFP
             if (Core::support.VAO && Core::active.VAO != 0)
                 glBindVertexArray(Core::active.VAO = 0);
 #endif
@@ -1137,7 +1147,7 @@ namespace GAPI {
                 setupFVF(vBuffer + range.vStart);
             } else {
                 ASSERT(Core::support.VAO);
-#ifndef __MORPHOS__
+#ifndef FFP
                 GLuint vao = VAO[range.aIndex];
                 if (Core::active.VAO != vao)
                     glBindVertexArray(Core::active.VAO = vao);
@@ -1146,7 +1156,7 @@ namespace GAPI {
         }
 
         void initNextRange(MeshRange &range, int &aIndex) const {
-#ifndef __MORPHOS__
+#ifndef FFP
             if (Core::support.VAO && VAO) {
                 ASSERT(aIndex < aCount);
 
@@ -1178,7 +1188,7 @@ namespace GAPI {
 
 
     bool extSupport(const char *str) {
-        #if !defined(_GAPI_GLES2) && !_OS_MAC && !__MORPHOS__
+        #if !defined(_GAPI_GLES2) && !_OS_MAC && !defined(__MORPHOS__) && !defined(__amigaos4__)
         if (glGetStringi != NULL) {
             GLint count = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &count); 
@@ -1283,7 +1293,7 @@ namespace GAPI {
                 GetProcOGL(glBufferData);
                 GetProcOGL(glBufferSubData);
             #endif
-#ifndef __MORPHOS__
+#ifndef FFP
             GetProcOGL(glGenVertexArrays);
             GetProcOGL(glDeleteVertexArrays);
             GetProcOGL(glBindVertexArray);
@@ -1491,9 +1501,7 @@ namespace GAPI {
     }
 
     void deinit() {
-        #ifdef FFP
-            return;
-        #endif
+        #ifndef FFP
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &FBO);
 
@@ -1504,6 +1512,7 @@ namespace GAPI {
             }
             rtCache[b].clear();
         }
+        #endif
     }
 
     inline mat4::ProjRange getProjRange() {
@@ -1529,7 +1538,7 @@ namespace GAPI {
     void endFrame() {}
 
     void resetState() {
-#ifndef __MORPHOS__
+#ifndef FFP
         if (Core::support.VAO)
             glBindVertexArray(0);
 #endif
@@ -1835,7 +1844,7 @@ namespace GAPI {
             color.y *= v->color.y;
             color.z *= v->color.z;
             glColor4ub(min(255, (int)color.x), min(255, (int)color.y), min(255, (int)color.z), v->light.w);
-            glTexCoord2s(v->texCoord.x, v->texCoord.y);
+            glTexCoord2i(v->texCoord.x, v->texCoord.y);
             glNormal3s(v->normal.x, v->normal.y, v->normal.z);
             glVertex3s(v->coord.x, v->coord.y, v->coord.z);
         }
