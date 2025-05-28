@@ -34,6 +34,14 @@ void dump(const char *fileName) {
 #endif
 }
 
+#ifndef OS_PTHREAD_MT
+// multi-threading
+void* osMutexInit() { return NULL; }
+void osMutexFree(void *obj) {}
+void osMutexLock(void *obj) {}
+void osMutexUnlock(void *obj) {}
+#endif
+
 #define WND_TITLE    "OpenLara"
 
 #ifdef __MORPHOS__

@@ -2473,11 +2473,6 @@ void osRWLockWrite(void *obj) {
 void osRWUnlockWrite(void *obj) {
     pthread_rwlock_unlock((pthread_rwlock_t*)obj);
 }
-#else
-void* osMutexInit() { return NULL; }
-void osMutexFree(void *obj) {}
-void osMutexLock(void *obj) {}
-void osMutexUnlock(void *obj) {}
 #endif
 
 
