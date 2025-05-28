@@ -17,7 +17,7 @@
 //#define TEST_SLOW_FIO
 
 #ifdef _DEBUG
-    #if defined(_OS_WP8) || defined(__MORPHOS__)
+    #if defined(_OS_WP8) || defined(__MORPHOS__) || defined(__amigaos4__)
         #define debugBreak() /* TODO */
     #elif defined(_OS_LINUX) || defined(_OS_RPI) || defined(_OS_CLOVER)
         #define debugBreak() raise(SIGTRAP);
@@ -2473,6 +2473,11 @@ void osRWLockWrite(void *obj) {
 void osRWUnlockWrite(void *obj) {
     pthread_rwlock_unlock((pthread_rwlock_t*)obj);
 }
+#else
+void* osMutexInit() { return NULL; }
+void osMutexFree(void *obj) {}
+void osMutexLock(void *obj) {}
+void osMutexUnlock(void *obj) {}
 #endif
 
 
