@@ -59,19 +59,60 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
-void toggleFullscreen () {
+int passfull = 0; 
 
-    Uint32 flags = 0;
-	int w, h;
-    
-	fullscreen = !fullscreen;
-    SDL_SetWindowFullscreen (as->window, fullscreen);
+void toggleFullscreen() {
+    int w, h;
 
-    // Tell the engine we have changed display size!
-	SDL_GetWindowSizeInPixels(as->window, &w, &h);
-	Core::width  = w;
+    fullscreen = !fullscreen;
+
+    if (fullscreen) {
+        SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
+
+        int windowW, windowH;
+        SDL_GetWindowSizeInPixels(as->window, &windowW, &windowH);
+
+        int num_modes = 0;
+        SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
+
+        if (modes && num_modes > 0) {
+            SDL_DisplayMode* bestMode = nullptr;
+            int bestDiff = INT_MAX;
+
+            for (int i = 0; i < num_modes; ++i) {
+                SDL_DisplayMode* mode = modes[i];
+
+                int dw = mode->w;
+                int dh = mode->h;
+
+                int diff = std::abs(dw - windowW) + std::abs(dh - windowH);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
+                    bestMode = mode;
+                }
+            }
+
+            if (bestMode) {
+                w = bestMode->w;
+                h = bestMode->h;
+                SDL_SetWindowFullscreenMode(as->window, bestMode);
+                SDL_SetWindowFullscreen (as->window, fullscreen);
+			    
+            } else {
+                fullscreen = false;
+            }
+        } else {
+            fullscreen = false;
+        }
+    } else {
+        SDL_SetWindowFullscreenMode(as->window, NULL);
+        SDL_SetWindowFullscreen (as->window, fullscreen);
+    	SDL_GetWindowSize(as->window, &w, &h);
+    }
+    passfull = 1;
+    Core::width = w;
     Core::height = h;
-
+    
 }
 
 // GamePad
@@ -468,7 +509,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   
 	as->window = SDL_CreateWindow(WND_TITLE,
                               SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT,
-                              SDL_WINDOW_OPENGL);
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	int w, h;
 	SDL_GetWindowSizeInPixels(as->window, &w, &h);
 	Core::width  = w;
@@ -511,6 +552,17 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     switch (event->type) 
     {
+    	case SDL_EVENT_WINDOW_RESIZED: {
+		    int w = event->window.data1;
+			int h = event->window.data2;
+			if (passfull == 0) {
+			    Core::width  = w;
+				Core::height = h;
+			} else {
+				passfull = 0;	
+			}
+    		break;
+    	}	
 		case SDL_EVENT_QUIT:
 			Core::isQuit = true;
 			return SDL_APP_SUCCESS;   
@@ -518,13 +570,17 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 		case SDL_EVENT_KEY_DOWN: {
 			int scancode = event->key.scancode;
 			key = codeToInputKey(scancode);
+			
+			if (event->key.mod & SDL_KMOD_ALT && scancode == SDL_SCANCODE_RETURN) {
+	            toggleFullscreen();
+	            break;
+			}
+			
 			if (key != ikNone) {
 				Input::setDown(key, 1);
 			} 
 				
-			if (event->key.mod & SDL_KMOD_ALT && scancode == SDL_SCANCODE_RETURN) {
-	            toggleFullscreen();
-			}
+
 	        
 			if (scancode == SDL_SCANCODE_F1) {
 	            screenshot("screenshot");		
