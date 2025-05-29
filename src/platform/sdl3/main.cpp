@@ -25,7 +25,6 @@ bool fullscreen = false;
 typedef struct {
     SDL_Window *window;
 #if defined(_GAPI_SW)    
-    SDL_Renderer *renderer;
     SDL_Surface *surface;
 #else
     SDL_GLContext context;
@@ -35,7 +34,7 @@ typedef struct {
 AppState *as;
 
 // Some functions
-void dump(const char *fileName) {
+static void screenshot(const char *fileName) {
 #if defined(_GAPI_SW)
 //TODO
 #else	
@@ -462,17 +461,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
 
     *appstate = as;
- #ifdef _GAPI_SW  
-    if (!SDL_CreateWindowAndRenderer(WND_TITLE, SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &as->window, &as->renderer)) {
-        LOG("Couldn't create window: %s", SDL_GetError());   
-        return SDL_APP_FAILURE;
-    }
-#else
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+  
 	as->window = SDL_CreateWindow(WND_TITLE,
                               SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT,
                               SDL_WINDOW_OPENGL);
-
-#endif
 	int w, h;
 	SDL_GetWindowSizeInPixels(as->window, &w, &h);
 	Core::width  = w;
@@ -531,7 +527,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			}
 	        
 			if (scancode == SDL_SCANCODE_F1) {
-	            dump("screenshot");		
+	            screenshot("screenshot");		
 	        }
 			break;
 		}
@@ -599,9 +595,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     
     if (appstate != NULL) {
         as = (AppState *)appstate;
-#if defined(_GAPI_SW)
-        SDL_DestroyRenderer(as->renderer);
-#endif
         
 #if defined(_GAPI_SW)
 		SDL_DestroySurface(as->surface);

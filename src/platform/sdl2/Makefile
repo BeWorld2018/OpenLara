@@ -11,7 +11,7 @@ TARGET = openlara
 SDL_CFLAGS := $(shell sdl2-config --cflags) -I/gg/usr/local/include
 SDL_LDFLAGS := $(shell sdl2-config --libs)
 
-CFLAGS+= -std=gnu++11 -O1 -fsigned-char -I../../ -fno-exceptions -Wno-unused-variable -fno-rtti  -D__SDL2__ $(SDL_CFLAGS) -Wall
+CFLAGS+= -std=gnu++11 -O3 -fsigned-char -I../../ -fno-exceptions -Wno-unused-variable -fno-rtti  -D__SDL2__ $(SDL_CFLAGS) -Wall
 #-ffunction-sections -fdata-sections -Wl,--gc-sections
 CXXFLAGS+= $(CFLAGS)
 LDFLAGS+= $(SDL_LDFLAGS) -lpthread 

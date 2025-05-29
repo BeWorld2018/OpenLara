@@ -9,7 +9,7 @@
 #include <SDL2/SDL.h>
 
 #include "game.h"
-void dump(const char *fileName) {
+static void screenshot(const char *fileName) {
 #if defined(_GAPI_SW)
 //TODO
 #else
@@ -17,6 +17,7 @@ void dump(const char *fileName) {
 	int height = Core::height;
 	int size = width * height * 4;
     char *data = new char[size];
+
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	char* flipped = new char[size];
@@ -43,6 +44,8 @@ void osMutexUnlock(void *obj) {}
 #endif
 
 #define WND_TITLE    "OpenLara"
+#define SDL_WINDOW_WIDTH           640
+#define SDL_WINDOW_HEIGHT          480
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
@@ -118,8 +121,6 @@ void sndFree() {
 
 #define MAX_JOYS 4
 #define JOY_DEAD_ZONE_STICK      8192
-#define WIN_W 640
-#define WIN_H 480
 
 struct sdl_input *sdl_inputs;
 int sdl_numjoysticks, sdl_numcontrollers;
@@ -445,7 +446,7 @@ void inputUpdate() {
                     }
                 }
 				if (scancode == SDL_SCANCODE_F1) {
-                    dump("screenshot");
+                    screenshot("screenshot");
                 }
 #endif
                 break;
@@ -620,10 +621,8 @@ int main(int argc, char **argv) {
     }
 
     int w, h;
-    // SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER/*|SDL_INIT_HAPTIC*/);
 
-    //SDL_GetCurrentDisplayMode(0, &sdl_displaymode);
+    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER);
 
 #ifdef _GAPI_GLES
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -635,7 +634,7 @@ int main(int argc, char **argv) {
     //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	sdl_window = SDL_CreateWindow(WND_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIN_W, WIN_H, 
+        SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 
         #ifndef _GAPI_SW
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
         #else

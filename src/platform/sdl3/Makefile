@@ -11,7 +11,7 @@ TARGET = openlara
 SDL_CFLAGS := -noixemul -I/gg/usr/local/include
 SDL_LDFLAGS := -noixemul -L/gg/usr/local/lib -lSDL3 -lGL -lm -lpthread
 
-CFLAGS+= -std=gnu++11 -fsigned-char -O1 -g -I../../ -fno-exceptions -Wno-unused-variable -fno-rtti  -D__SDL3__ $(SDL_CFLAGS) -Wall
+CFLAGS+= -std=gnu++11 -fsigned-char -O3 -I../../ -fno-exceptions -Wno-unused-variable -fno-rtti  -D__SDL3__ $(SDL_CFLAGS) -Wall
 #-ffunction-sections -fdata-sections -Wl,--gc-sections
 CXXFLAGS+= $(CFLAGS)
 LDFLAGS+= $(SDL_LDFLAGS) 
