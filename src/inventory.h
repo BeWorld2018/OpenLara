@@ -1438,7 +1438,7 @@ struct Inventory {
     }
 
     void prepareBackground() {
-        #ifdef FFP
+        #if defined(FFP) && defined(_GAPI_GU)
             return;
         #endif
 
@@ -1466,12 +1466,37 @@ struct Inventory {
         mProj.scale(vec3(1.0f / 32767.0f));
         Core::setViewProj(mView, mProj);
 
-        for (int view = 0; view < viewsCount; view++) {
+#if defined(FFP) && defined(_GAPI_GL)
+        GAPI::Texture* target = Core::active.target;
+        if (target) {
+            
+            uint32_t* src = new uint32_t[target->width * target->height];
+            uint16_t* dst = new uint16_t[target->width * target->height];
+            glReadPixels(0, 0, target->width, target->height, GL_RGBA, GL_UNSIGNED_BYTE, src);
+
+            for (int i = 0; i < target->width * target->height; i++) {
+                uint32_t rgba = src[i];
+                uint8_t r = (rgba >> 0 ) & 0xFF;
+                uint8_t g = (rgba >> 8 ) & 0xFF;
+                uint8_t b = (rgba >> 16) & 0xFF;
+                uint8_t gray = (uint8_t)(0.299f * r  + 0.587f * g + 0.114f * b);
+                dst[i] = ((gray >> 4) << 11) | ((gray >> 3) << 5) | (gray >> 3);
+            }
+
+            target->update(dst);
+
+            delete[] src;
+            delete[] dst;
+	
+        }
+
+#else
+       for (int view = 0; view < viewsCount; view++) {
             blur(background[view], background[2]);
             grayscale(background[view], background[2]);
             swap(background[view], background[2]);
         }
-
+#endif    
         #ifdef _OS_3DS
             GAPI::rotate90 = true;
         #endif
@@ -1858,7 +1883,7 @@ struct Inventory {
         vertices[3].texCoord = short4(    0,     0, 0, 0);
 
         Texture *backTex = NULL;
-    #if defined(FFP) && defined(_GAPI_SW)
+#if defined(FFP) && defined(_GAPI_SW)
         backTex = Core::blackTex;
 
         mat4 m;
@@ -1866,7 +1891,7 @@ struct Inventory {
         Core::setViewProj(m, m);
         Core::mModel.identity();
 
-    #else
+#else
         if (Core::settings.detail.stereo == Core::Settings::STEREO_VR || !background[0]) {
             backTex = Core::blackTex; // black background 
         } else {
@@ -1877,7 +1902,14 @@ struct Inventory {
                 backTex = background[Core::eye <= 0.0f ? 0 : 1];
             }
         }
-    #endif
+#endif
+#if defined(FFP)
+		for (int i = 0; i < 4; i++) {
+            vertices[i].color = ubyte4(255, 255, 255, 255);
+        }
+       
+       // backTex->dump("background.bmp");
+#endif
         backTex->bind(sDiffuse);
 
         mat4 mProj, mView;
@@ -1888,7 +1920,7 @@ struct Inventory {
 
         game->setShader(Core::passFilter, Shader::FILTER_UPSCALE, false, false);
         Core::active.shader->setParam(uParam, vec4(float(Core::active.textures[sDiffuse]->width), float(Core::active.textures[sDiffuse]->height), 0.0f, 0.0f));
-
+        Core::setMaterial(1, 1, 1, 1);
         Core::setBlendMode(phaseRing < 1.0f ? bmAlpha : bmNone);
         game->getMesh()->renderBuffer(indices, COUNT(indices), vertices, COUNT(vertices));
     }
