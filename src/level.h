@@ -415,7 +415,9 @@ struct Level : IGame {
 
         if (rebuildAmbient) {
             delete ambientCache;
+#ifndef FFP
             ambientCache = Core::settings.detail.lighting > Core::Settings::MEDIUM ? new AmbientCache(this) : NULL;
+#endif
         }
 
         if (rebuildShadows)
@@ -423,7 +425,9 @@ struct Level : IGame {
             
         if (rebuildWater) {
             delete waterCache;
+#ifndef FFP
             waterCache = Core::settings.detail.water > Core::Settings::LOW ? new WaterCache(this) : NULL;
+#endif
         }
 
         if (redraw && inventory->active && !level.isTitle())
@@ -988,9 +992,10 @@ struct Level : IGame {
             camera = player->camera;
 
             zoneCache    = new ZoneCache(this);
+#ifndef FFP
             ambientCache = Core::settings.detail.lighting > Core::Settings::MEDIUM ? new AmbientCache(this) : NULL;
             waterCache   = Core::settings.detail.water    > Core::Settings::LOW    ? new WaterCache(this)   : NULL;
-
+#endif
             if (ambientCache) { // at first calculate ambient cube for Lara
                 AmbientCache::Cube cube;
                 ambientCache->getAmbient(players[0]->getRoomIndex(), players[0]->pos, cube); // add to queue
