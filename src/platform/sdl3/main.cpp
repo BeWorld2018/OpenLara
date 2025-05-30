@@ -12,6 +12,7 @@
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
+const char *version_tag = "$VER: OpenLara 0.1.0 (xx.xx.2025)\r\n";
 #endif
 
 bool fullscreen = false;
@@ -19,8 +20,8 @@ bool fullscreen = false;
 #include "game.h"
 
 #define WND_TITLE    "OpenLara"
-#define SDL_WINDOW_WIDTH           800
-#define SDL_WINDOW_HEIGHT          600
+#define SDL_WINDOW_WIDTH           640
+#define SDL_WINDOW_HEIGHT          480
 
 typedef struct {
     SDL_Window *window;
@@ -35,9 +36,7 @@ AppState *as;
 
 // Some functions
 static void screenshot(const char *fileName) {
-#if defined(_GAPI_SW)
-//TODO
-#else	
+#if defined(_GAPI_GL)
     int width  = Core::width;
 	int height = Core::height;
 	int size = width * height * 4;

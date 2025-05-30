@@ -31,7 +31,11 @@
     #define ASSERTV(expr) ASSERT(expr)
 
     #ifndef _OS_ANDROID
+#if (defined(__MORPHOS__) || defined(__amigaos4__)) && (defined(__SDL2__) || defined(__SDL3__) )
+        #define LOG SDL_Log
+#else
         #define LOG printf
+#endif
     #endif
 
     #if defined(_OS_XBOX) || defined(_OS_XB1) || defined(_OS_WP8)
@@ -59,6 +63,8 @@
         #else
             #define LOG(...) printf(__VA_ARGS__)
         #endif
+    #elif (defined(__MORPHOS__) || defined(__amigaos4__)) && (defined(__SDL2__) || defined(__SDL3__) )
+        #define LOG SDL_Log
     #else
         #define LOG printf
     #endif
