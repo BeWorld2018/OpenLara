@@ -72,9 +72,9 @@
     #endif
     #define INV_QUALITY
     #define INV_STEREO
-    
-    #undef USE_CUBEMAP_MIPS
-    
+    #ifdef __MORPHOS__
+    	#undef USE_CUBEMAP_MIPS
+    #endif
 #elif __SDL3__
     //#define _GAPI_SW    1
     #define _GAPI_GL   1
@@ -82,7 +82,9 @@
     #define INV_QUALITY
     #define INV_STEREO
     
-    #undef USE_CUBEMAP_MIPS
+   #ifdef __MORPHOS__
+    	#undef USE_CUBEMAP_MIPS
+    #endif
     
 #elif __RPI__
     #define _OS_RPI    1
@@ -374,6 +376,9 @@ namespace Core {
         bool profMarker;
         bool profTiming;
     #endif
+#ifdef FFP
+        bool texCUBE;
+#endif
     } support;
 
 #define SETTINGS_VERSION 7
@@ -901,6 +906,9 @@ namespace Core {
 
         LOG("cache    : %s\n", cacheDir);
         LOG("supports :\n");
+#ifdef FFP
+        LOG("  CubeMap support: %s\n", support.texCUBE 		 ? "true" : "false");
+#endif
         LOG("  variyngs count : %d\n", support.maxVectors);
         LOG("  binary shaders : %s\n", support.shaderBinary  ? "true" : "false");
         LOG("  vertex arrays  : %s\n", support.VAO           ? "true" : "false");

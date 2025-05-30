@@ -1407,6 +1407,10 @@ namespace GAPI {
         glDepthFunc(GL_LEQUAL);
 
     #ifdef FFP
+
+        support.texNPOT = extSupport("_texture_npot") || extSupport("_texture_non_power_of_two");
+		support.texCUBE = extSupport("_texture_cube_map");
+
         glEnable(GL_TEXTURE_2D);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
