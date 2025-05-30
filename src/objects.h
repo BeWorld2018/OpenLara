@@ -903,8 +903,18 @@ struct Crystal : Controller {
 
     void bake() {
         ASSERT(!environment);
+        #ifdef FFP
+            uint32 opt;
+            if (Core::support.texCUBE) {
+                opt = OPT_CUBEMAP | OPT_TARGET;
+            }
+            else {
+                opt = OPT_SPHERE_MAP | OPT_TARGET;
+            }
+#else
+            uint32 opt = OPT_CUBEMAP | OPT_TARGET;
+#endif
 
-        uint32 opt = OPT_CUBEMAP | OPT_TARGET;
         #ifdef USE_CUBEMAP_MIPS
             opt |= OPT_MIPMAPS;
         #endif

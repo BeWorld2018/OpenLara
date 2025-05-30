@@ -1000,13 +1000,46 @@ namespace GAPI {
 
             if (Core::active.textures[sampler] != this) {
                 Core::active.textures[sampler] = this;
-            #ifdef FFP
+#ifdef FFP
                 if (sampler != sDiffuse) {
                     return;
                 }
-            #else
+#else
                 glActiveTexture(GL_TEXTURE0 + sampler);
-            #endif
+#endif
+#ifdef FFP
+                if (Core::support.texCUBE) {
+                    glDisable(GL_TEXTURE_2D);
+                    glDisable(GL_TEXTURE_CUBE_MAP);
+                    glEnable(target);
+                    if (target == GL_TEXTURE_CUBE_MAP) {
+                        glEnable(GL_TEXTURE_GEN_S);
+                        glEnable(GL_TEXTURE_GEN_T);
+                        glEnable(GL_TEXTURE_GEN_R);
+                        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+                        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+                        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+                    }
+                    else {
+                        glDisable(GL_TEXTURE_GEN_S);
+                        glDisable(GL_TEXTURE_GEN_T);
+                        glDisable(GL_TEXTURE_GEN_R);
+                    }
+
+                } else {
+
+                    if (opt & OPT_SPHERE_MAP) {
+                        glEnable(GL_TEXTURE_GEN_S);
+                        glEnable(GL_TEXTURE_GEN_T);
+                        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+                        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+                    }
+                    else {
+                        glDisable(GL_TEXTURE_GEN_S);
+                        glDisable(GL_TEXTURE_GEN_T);
+                    }
+                }
+#endif 
                 glBindTexture(target, ID);
             }
         }
@@ -1409,7 +1442,7 @@ namespace GAPI {
     #ifdef FFP
 
         support.texNPOT = extSupport("_texture_npot") || extSupport("_texture_non_power_of_two");
-		support.texCUBE = extSupport("_texture_cube_map");
+        support.texCUBE = extSupport("_texture_cube_map");
 
         glEnable(GL_TEXTURE_2D);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -1418,12 +1451,8 @@ namespace GAPI {
         glEnableClientState(GL_VERTEX_ARRAY);
             
         glAlphaFunc(GL_GREATER, 0.5f);
-
-        glMatrixMode(GL_TEXTURE);
-        glLoadIdentity();
-        glScalef(1.0f / 32767.0f, 1.0f / 32767.0f, 1.0f / 32767.0f);
-
         glClearColor(0, 0, 0, 0);
+
     #else 
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&defaultFBO);
         glGenFramebuffers(1, &FBO);
@@ -1832,37 +1861,43 @@ namespace GAPI {
             Core::active.shader->validate();
         }
 #ifdef FFP
-        float ambient = Core::active.material.y;
+        bool isMirror = Core::active.material.w == 0;
+        float ambient = isMirror ? 1.0f : Core::active.material.y;
+        mat4 mModelInv = mModel.inverseOrtho();
+        bool waterEnabled = (Core::params.y < 1000000.0f && Core::params.y > 0.0f);
 
         glBegin(GL_TRIANGLES);
         for (int i = 0; i < range.iCount; i++) {
             GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
-            vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
-            color *= ambient;
+            vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f) * ambient;
             vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
             vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
-            mat4 mModelInv = mModel.inverseOrtho();
+            
             for (int j = 0; j < MAX_LIGHTS; j++) {
-                if (lightColor[j].w >= 1.0f) {
-                    continue;
-                }
+                if (lightColor[j].w >= 1.0f) continue;
                 vec3 pos = mModelInv * lightPos[j].xyz();
                 vec3 dir = (pos - coord) * lightColor[j].w;
                 float att = dir.length2();
+                if (att == 0.0f) continue;
                 float lum = normal.dot(dir / sqrtf(att));
                 vec3 light = lightColor[j].xyz();
                 light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
                 color += light;
             }
-            if (Core::params.y < 1000000.0f && Core::params.y > 0) { // NO_WATER_HEIGHT
+           
+            if (waterEnabled) {
                 color *= 0.5f + fabsf(sinf(coord.dot(vec3(1.0f / 1024.0f)) + Core::params.x)) * 0.75f;
                 color *= vec3(0.6f, 0.9f, 0.9f);
             }
-            color.x *= v->color.x;
-            color.y *= v->color.y;
-            color.z *= v->color.z;
+            color *= vec3(v->color.x, v->color.y, v->color.z);
+
+            if (isMirror)
+                color *= Core::active.material.xyz();
+            else
+                color *= 1.25f;
+
             glColor4ub(min(255, (int)color.x), min(255, (int)color.y), min(255, (int)color.z), v->light.w);
-            glTexCoord2i(v->texCoord.x, v->texCoord.y);
+            glTexCoord2f((float)v->texCoord.x / 32767.0f, (float)v->texCoord.y / 32767.0f);
             glNormal3s(v->normal.x, v->normal.y, v->normal.z);
             glVertex3s(v->coord.x, v->coord.y, v->coord.z);
         }

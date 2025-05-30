@@ -312,7 +312,18 @@ struct Character : Controller {
 
         flags.invisible = true;
         if (!environment) {
+#ifdef FFP
+            uint32 opt;
+            if (Core::support.texCUBE) {
+                opt = OPT_CUBEMAP | OPT_TARGET;
+            }
+            else {
+                opt = OPT_SPHERE_MAP | OPT_TARGET;
+            }
+#else
             uint32 opt = OPT_CUBEMAP | OPT_TARGET;
+#endif
+
             #ifdef USE_CUBEMAP_MIPS
                 opt |= OPT_MIPMAPS;
             #endif

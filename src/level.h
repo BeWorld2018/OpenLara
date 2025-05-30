@@ -619,7 +619,8 @@ struct Level : IGame {
     }
 
     virtual void renderEnvironment(int roomIndex, const vec3 &pos, Texture **targets, int stride = 0, Core::Pass pass = Core::passAmbient) {
-        #ifdef FFP
+
+        #if defined(FFP) && !defined(_GAPI_GL)
             return;
         #endif
 
@@ -644,6 +645,35 @@ struct Level : IGame {
         int16 rIndex = roomIndex;
         level.getSector(rIndex, pos); // fix room index for overlapped blocks
 
+#if defined(FFP) && defined(_GAPI_GL)
+		if (!Core::support.texCUBE) { 
+			// only for OPT_SPHERE_MAP
+	        setupCubeCamera(pos, 0);
+	        Core::pass = pass;
+	        Core::setTarget(targets[0], NULL, RT_CLEAR_COLOR | RT_CLEAR_DEPTH | RT_STORE_COLOR);
+	        renderView(rIndex, false, false);
+	        GAPI::Texture* target = Core::active.target;
+	        if (target) {
+	            uint32_t* src = new uint32_t[target->width * target->height];
+	            uint16_t* dst = new uint16_t[target->width * target->height];
+	
+	            glReadPixels(0, 0, target->width, target->height, GL_RGBA, GL_UNSIGNED_BYTE, src);
+	
+	            for (int i = 0; i < target->width * target->height; i++) {
+	                uint32 rgba = src[i];
+	                Color32 color(src[i]);
+	                dst[i] = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
+	            }
+	
+	            target->update(dst);
+	            //targets[0]->dump("texture");
+	
+	            delete[] src;
+	            delete[] dst;
+	        }
+		} else {
+#endif
+
     // render level into cube faces or texture images
         for (int i = 0; i < 6; i++) {
             setupCubeCamera(pos, i);
@@ -654,8 +684,38 @@ struct Level : IGame {
                 Core::setTarget(targets[i * stride], NULL, RT_CLEAR_COLOR | RT_CLEAR_DEPTH | RT_STORE_COLOR);
             }
             renderView(rIndex, false, false);
+#if defined(FFP) && defined(_GAPI_GL)
+		   if (Core::support.texCUBE) {
+	            GAPI::Texture* target = Core::active.target;
+	            if (target) {
+	                uint32_t* src = new uint32_t[target->width * target->height];
+	                uint16_t* dst = new uint16_t[target->width * target->height];
+	
+	                glReadPixels(0, 0, target->width, target->height, GL_RGBA, GL_UNSIGNED_BYTE, src);
+	
+	                for (int i = 0; i < target->width * target->height; i++) {
+	                    uint32 rgba = src[i];
+	                    Color32 color(src[i]);
+	                    dst[i] = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
+	                }
+	
+	                GAPI::FormatDesc desc = target->getFormat();
+	                if (targets[0]->opt & OPT_CUBEMAP) {
+	                    glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, target->origWidth, target->origHeight, desc.fmt, desc.type, dst);
+	                }
+	                else {
+	                    // TODO
+	                }
+	
+	                delete[] src;
+	                delete[] dst;
+	            }
+            }
+#endif
         }
-
+#if defined(FFP) && defined(_GAPI_GL)
+		} // !Core::support.texCUBE
+#endif
         #ifdef _GAPI_D3D8
             GAPI::setFrontFace(true);
         #endif

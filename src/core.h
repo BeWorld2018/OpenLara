@@ -581,6 +581,7 @@ enum TexOption {
     OPT_DEPEND      = 0x0100,
     OPT_PROXY       = 0x0200,
     OPT_VRAM_3DS    = 0x0400,
+    OPT_SPHERE_MAP  = 0x0800,
 };
 
 // Pipeline State Object
