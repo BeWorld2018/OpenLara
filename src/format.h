@@ -3343,6 +3343,21 @@ namespace TR {
                 ASSERT(false);
                 return;
             }
+            else {
+                // LOG version
+                const char* versionstr = "UNKNOWN_VERSION";
+                switch (version) {
+                case VER_TR1_PC: versionstr = "VER_TR1_PC";  break;
+                case VER_TR1_PSX: versionstr = "VER_TR1_PSX"; break;
+                case VER_TR1_SAT: versionstr = "VER_TR1_SAT"; break;
+                case VER_TR2_PC: versionstr = "VER_TR2_PC";  break;
+                case VER_TR3_PC: versionstr = "VER_TR3_PC";  break;
+                case VER_TR3_PSX: versionstr = "VER_TR3_PSX"; break;
+                case VER_TR4_PC: versionstr = "VER_TR4_PC";  break;
+                default: break;
+                }
+                LOG("level format version %s\n", versionstr);
+            }
 
         #ifdef _GAPI_SW
             ASSERT((version & VER_TR1_PC) == VER_TR1_PC);
@@ -3656,8 +3671,14 @@ namespace TR {
         void loadTR3_PC (Stream &stream) {
             stream.read(palette,   256);
             stream.read(palette32, 256);
-            stream.read(tiles8, stream.read(tilesCount));
-            stream.read(tiles16, tilesCount);
+
+            tilesCount = stream.readLE32();
+            stream.read(tiles8, tilesCount);
+
+            tiles16 = new Tile16[tilesCount];
+            for (int i = 0; i < tilesCount; i++)
+                for (int j = 0; j < (256 * 256); j++)
+                    tiles16[i].color[j].value = stream.readLE16();
 
             readDataArrays(stream);
             readSpriteTex(stream);
@@ -3959,6 +3980,10 @@ namespace TR {
                 if (version & (VER_TR4 | VER_TR5)) {
                     stream.read(anim.speedLateral);
                     stream.read(anim.accelLateral);
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+                    anim.speedLateral.value = swap32(anim.speedLateral.value);
+                    anim.accelLateral.value = swap32(anim.accelLateral.value);
+#endif
                 } else {
                     anim.speedLateral.value = 0;
                     anim.accelLateral.value = 0;
@@ -4020,6 +4045,8 @@ namespace TR {
                 f.dx = stream.readLE32();
                 f.dy = stream.readLE32();
                 f.dz = stream.readLE32();
+                stream.read(f.sequence);
+				stream.read(f.index);
                 f.fov = stream.readLE16();
                 f.timer = stream.readLE16();
                 f.speed = stream.readLE16();
