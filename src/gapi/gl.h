@@ -875,7 +875,11 @@ namespace GAPI {
             ASSERT((opt & OPT_PROXY) == 0);
 
             bool filter   = (opt & OPT_NEAREST) == 0;
+#ifndef FFP
             bool mipmaps  = (opt & OPT_MIPMAPS) != 0;
+#else
+            bool mipmaps = false;
+#endif
             bool isCube   = (opt & OPT_CUBEMAP) != 0;
             bool isVolume = (opt & OPT_VOLUME)  != 0;
             bool isShadow = fmt == FMT_SHADOW;
@@ -1060,7 +1064,11 @@ namespace GAPI {
 
         void setFilterQuality(int value) {
             bool filter  = (opt & OPT_NEAREST) == 0 && (value > Core::Settings::LOW);
+#ifndef FFP
             bool mipmaps = (opt & OPT_MIPMAPS) != 0;
+#else
+            bool mipmaps = false;
+#endif
 
             Core::active.textures[0] = NULL;
             bind(0);
