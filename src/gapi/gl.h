@@ -1832,21 +1832,28 @@ namespace GAPI {
         float ambient = isMirror ? 1.0f : Core::active.material.y;
         mat4 mModelInv = mModel.inverseOrtho();
         bool waterEnabled = (Core::params.y < 1000000.0f && Core::params.y > 0.0f);
+        vec3 lightsRelPos[MAX_LIGHTS];
+        if (!isFlash) {
+            for (int j = 0; j < MAX_LIGHTS; j++) {
+                if (lightColor[j].w >= 1.0f) continue;
+                lightsRelPos[j] = mModelInv * lightPos[j].xyz();
+            }
+        }
 
         glBegin(GL_TRIANGLES);
         for (int i = 0; i < range.iCount; i++) {
             GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
             vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
-            vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
             vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
             if (!isFlash) {
+                vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
                 color *= ambient;
                 for (int j = 0; j < MAX_LIGHTS; j++) {
                     if (lightColor[j].w >= 1.0f) continue;
-                    vec3 pos = mModelInv * lightPos[j].xyz();
+                    vec3 pos = lightsRelPos[j];
                     vec3 dir = (pos - coord) * lightColor[j].w;
                     float att = dir.length2();
-                    if (att == 0.0f) continue;
+                    if (att == 0.0f || att == 1.0f) continue;
                     float lum = normal.dot(dir / sqrtf(att));
                     vec3 light = lightColor[j].xyz();
                     light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
