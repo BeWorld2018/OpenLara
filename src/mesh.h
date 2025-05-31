@@ -464,7 +464,11 @@ struct MeshBuilder {
             Vertex &v0 = vertices[vCount + i * 2 + 0];
             v0.normal    = short4( 0, -1, 0, 1 );
             v0.texCoord  = short4( whiteObject.texCoordAtlas[0].x, whiteObject.texCoordAtlas[0].y, 32767, 32767 );
-            v0.color     = v0.light = ubyte4( 0, 0, 0, 0 );
+#ifdef FFP
+            v0.color     = v0.light = ubyte4 (180, 180, 180, 0);
+#else
+            v0.color     = v0.light = ubyte4(0, 0, 0, 0);
+#endif
 
             if (i == 8) {
                 v0.coord = short4( 0, 0, 0, 0 );

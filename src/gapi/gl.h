@@ -1780,49 +1780,7 @@ namespace GAPI {
     }
 
     void updateLights(vec4 *lightPos, vec4 *lightColor, int count) {
-    #ifdef FFP
-
-   /*   
-    int lightsCount = 0;
-
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        vec4 amb(vec3(Core::active.material.y), 1.0f);
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, (GLfloat*)&amb);
-
-        for (int i = 0; i < count; i++) {
-            GLenum light = GL_LIGHT0 + i;
-
-            if (lightColor[i].w != 1.0f) {
-                glEnable(light);
-                lightsCount++;
-            } else {
-                glDisable(light);
-                continue;
-            }
-
-            vec4 pos(lightPos[i].xyz(), 1.0f);
-            vec4 color(lightColor[i].xyz(), 1.0f);
-            float att = lightColor[i].w * lightColor[i].w;
-
-            glLightfv(light, GL_POSITION, (GLfloat*)&pos);
-            glLightfv(light, GL_DIFFUSE,  (GLfloat*)&color);
-            glLightfv(light, GL_QUADRATIC_ATTENUATION, (GLfloat*)&att);
-        }
-
-        glPopMatrix();
-
-        if (lightsCount) {
-            glEnable(GL_COLOR_MATERIAL);
-            glEnable(GL_LIGHTING);        
-        } else {
-            glDisable(GL_COLOR_MATERIAL);
-            glDisable(GL_LIGHTING);
-        }
-        */
-    #else
+    #ifndef FFP
         if (Core::active.shader) {
             Core::active.shader->setParam(uLightColor, lightColor[0], count);
             Core::active.shader->setParam(uLightPos,   lightPos[0],   count);
@@ -1861,7 +1819,8 @@ namespace GAPI {
             Core::active.shader->validate();
         }
 #ifdef FFP
-        bool isMirror = Core::active.material.w == 0;
+        bool isMirror = (Core::renderType == 4);
+        bool isFlash = (Core::renderType == 1);
         float ambient = isMirror ? 1.0f : Core::active.material.y;
         mat4 mModelInv = mModel.inverseOrtho();
         bool waterEnabled = (Core::params.y < 1000000.0f && Core::params.y > 0.0f);
@@ -1869,20 +1828,22 @@ namespace GAPI {
         glBegin(GL_TRIANGLES);
         for (int i = 0; i < range.iCount; i++) {
             GAPI::Vertex* v = &mesh->vBuffer[range.vStart + mesh->iBuffer[range.iStart + i]];
-            vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f) * ambient;
+            vec3 color = vec3(v->light.x / 255.0f, v->light.y / 255.0f, v->light.z / 255.0f);
             vec3 normal = vec3(float(v->normal.x), float(v->normal.y), float(v->normal.z)).normal();
             vec3 coord = vec3(float(v->coord.x), float(v->coord.y), float(v->coord.z));
-            
-            for (int j = 0; j < MAX_LIGHTS; j++) {
-                if (lightColor[j].w >= 1.0f) continue;
-                vec3 pos = mModelInv * lightPos[j].xyz();
-                vec3 dir = (pos - coord) * lightColor[j].w;
-                float att = dir.length2();
-                if (att == 0.0f) continue;
-                float lum = normal.dot(dir / sqrtf(att));
-                vec3 light = lightColor[j].xyz();
-                light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
-                color += light;
+            if (!isFlash) {
+                color *= ambient;
+                for (int j = 0; j < MAX_LIGHTS; j++) {
+                    if (lightColor[j].w >= 1.0f) continue;
+                    vec3 pos = mModelInv * lightPos[j].xyz();
+                    vec3 dir = (pos - coord) * lightColor[j].w;
+                    float att = dir.length2();
+                    if (att == 0.0f) continue;
+                    float lum = normal.dot(dir / sqrtf(att));
+                    vec3 light = lightColor[j].xyz();
+                    light *= max(0.0f, lum) * max(0.0f, 1.0f - att);
+                    color += light;
+                }
             }
            
             if (waterEnabled) {

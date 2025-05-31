@@ -2576,7 +2576,6 @@ struct Level : IGame {
             Core::setBlendMode(bmPremult);
             renderEntitiesTransp(transp);
 
-        #ifndef FFP
             Core::setFog(FOG_NONE);
             Core::whiteTex->bind(sDiffuse);
             Core::setBlendMode(bmMult);
@@ -2587,7 +2586,6 @@ struct Level : IGame {
                     controller->renderShadow(mesh);
             }
             Core::setBlendMode(bmNone);
-        #endif
         }
 
         if (transp == 2) {

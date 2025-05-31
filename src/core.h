@@ -741,6 +741,9 @@ namespace Core {
     GAPI::Texture *defaultTarget;
     
     int32   renderState;
+#ifdef FFP
+    int32   renderType;
+#endif
 
     struct Active {
         const PSO     *pso;

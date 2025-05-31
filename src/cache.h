@@ -194,6 +194,9 @@ struct ShaderCache {
 
     void bind(Core::Pass pass, Shader::Type type, int fx) {
         Core::pass = pass;
+#ifdef FFP
+        Core::renderType = type;
+#endif
 
         Shader *shader = getShader(pass, type, fx);
         if (shader) {
