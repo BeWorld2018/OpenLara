@@ -6,7 +6,9 @@
 #endif
 
 #include <stdio.h>
+#ifndef __amigaos4__
 #include <memory.h>
+#endif
 
 #define OS_FILEIO_CACHE
 #define OS_PTHREAD_MT
@@ -73,7 +75,11 @@
     #define INV_QUALITY
     #define INV_STEREO
     #ifdef __MORPHOS__
-    	#undef USE_CUBEMAP_MIPS
+        #undef USE_CUBEMAP_MIPS
+        #undef OS_PTHREAD_MT
+    #endif
+    #ifdef __amigaos4__
+        #undef OS_PTHREAD_MT
     #endif
 #elif __SDL3__
     //#define _GAPI_SW    1
@@ -82,8 +88,9 @@
     #define INV_QUALITY
     #define INV_STEREO
     
-   #ifdef __MORPHOS__
-    	#undef USE_CUBEMAP_MIPS
+    #ifdef __MORPHOS__
+        #undef USE_CUBEMAP_MIPS
+        #undef OS_PTHREAD_MT
     #endif
     
 #elif __RPI__
@@ -797,8 +804,8 @@ namespace Core {
 
         void stop() {
             if (fpsTime < Core::getTime()) {
-                LOG("FPS: %d DIP: %d TRI: %d RT: %d\n", fps, dips, tris, rt);
             #ifdef PROFILE
+                LOG("FPS: %d DIP: %d TRI: %d RT: %d\n", fps, dips, tris, rt);
                 LOG("frame time: %d mcs\n", tFrame / 1000);
                 LOG("sound: mix %d rev %d ren %d/%d ogg %d\n", Sound::stats.mixer, Sound::stats.reverb, Sound::stats.render[0], Sound::stats.render[1], Sound::stats.ogg);
                 LOG("video: %d\n", video);

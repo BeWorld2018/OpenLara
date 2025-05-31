@@ -755,7 +755,7 @@ struct Texture : GAPI::Texture {
 
             for (uint32 j = 0; j < dh; j++)
                 for (uint32 i = 0; i < dw; i++)
-#ifdef __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
                     * dst++ = (i < width && j < height) ? *src++ : 0x000000FF;
 #else
                     *dst++ = (i < width && j < height) ? *src++ : 0xFF000000;
@@ -767,7 +767,7 @@ struct Texture : GAPI::Texture {
 
         if (border) {
             for (uint32 y = 0; y < height; y++)
-#ifdef __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
                 ((uint32*)data)[y * dw] = ((uint32*)data)[y * dw + dw - 1] = 0x000000FF;
 #else
                 ((uint32*)data)[y * dw] = ((uint32*)data)[y * dw + dw - 1] = 0xFF000000;
