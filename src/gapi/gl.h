@@ -1858,12 +1858,11 @@ namespace GAPI {
                 color *= 0.5f + fabsf(sinf(coord.dot(vec3(1.0f / 1024.0f)) + Core::params.x)) * 0.75f;
                 color *= vec3(0.6f, 0.9f, 0.9f);
             }
-            color *= vec3(v->color.x, v->color.y, v->color.z);
 
             if (isMirror)
-                color *= Core::active.material.xyz();
+                color *= Core::active.material.xyz() * 255.0f;
             else
-                color *= 1.25f;
+                color *= vec3(v->color.x, v->color.y, v->color.z) * 1.25f;
 
             glColor4ub(min(255, (int)color.x), min(255, (int)color.y), min(255, (int)color.z), v->light.w);
             glTexCoord2f((float)v->texCoord.x / 32767.0f, (float)v->texCoord.y / 32767.0f);
