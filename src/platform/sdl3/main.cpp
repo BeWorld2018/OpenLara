@@ -132,11 +132,8 @@ void osJoyVibrate(int index, float L, float R) {
 	
 	if (R == 0.0 && L == 0.0)
 			return;
-	//if (index >= sdl_numgamepads)
-    //    return;
 	index++;
 #ifdef __MORPHOS__
-		//SDL_Log("L=%f R=%f\n", L, R);
 		L = L * 2;
 		R = R * 2;
 		if (L > 1.0f) L = 1.0f;
@@ -151,7 +148,6 @@ void osJoyVibrate(int index, float L, float R) {
 int joyGetIndex(SDL_JoystickID id) {
     int i;
     for (i = 0 ; i < sdl_numjoysticks; i++) {
-		//SDL_Log("SDL_GetJoystickID(sdl_joysticks[i])=%d i=%d id=%d", SDL_GetJoystickID(sdl_joysticks[i]), i, id);
         if (SDL_GetJoystickID(sdl_joysticks[i]) == id-1) {
             return i;
         }
@@ -174,12 +170,8 @@ bool joyIsController (Uint32 instanceID) {
 }
 
 void joyAdd(int index) {
-	//SDL_Log("joyAdd index=%d", index);
     if(SDL_IsGamepad(index)) {
-		//SDL_Log("joyAdd SDL_IsGamepad");
         SDL_Gamepad *gamepad = SDL_OpenGamepad(index);
-		//if (gamepad)
-		//	SDL_Log("joyAdd SDL_OpenGamepad");
         sdl_gamepads[index] = gamepad;
         sdl_joysticks[index] = SDL_GetGamepadJoystick(gamepad);
         sdl_numgamepads++;
@@ -194,7 +186,6 @@ void joyAdd(int index) {
 
 void joyRemove(Uint32 instanceID) {
     int i;
-	//SDL_Log("joyRemove index=%d", instanceID);
     // Closing game controller
     if (joyIsController(instanceID)) {
         for (i = 0; i < sdl_numgamepads; i++) {
@@ -347,13 +338,12 @@ bool sndInit() {
 		return false;
 	}
 	
-        SDL_ResumeAudioStreamDevice(stream);
+    SDL_ResumeAudioStreamDevice(stream);
 	return true;
 	
 };
 
 //input 
-
 
 InputKey codeToInputKey(int code) {
 
@@ -485,15 +475,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gettimeofday(&t, NULL);
     startTime = t.tv_sec;
 
-	SDL_SetAppMetadata("OpenLara SDL3 OpenGL MorphOS", "1.0", "info.xproger.openlara");
+	SDL_SetAppMetadata("OpenLara SDL3", "1.0", "info.xproger.openlara");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
 		LOG("Couldn't init SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    // SDL_AddGamepadMappingsFromFile("gamecontrollerdb.txt");
-	
     as = (AppState *)SDL_calloc(1, sizeof(AppState));
     if (!as) {
         LOG("Couldn't init app state: %s", SDL_GetError());
@@ -578,8 +566,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			if (key != ikNone) {
 				Input::setDown(key, 1);
 			} 
-				
-
 	        
 			if (scancode == SDL_SCANCODE_F1) {
 	            screenshot("screenshot");		

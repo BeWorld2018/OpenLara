@@ -3359,7 +3359,7 @@ namespace TR {
                 LOG("level format version %s\n", versionstr);
             }
 
-        #ifdef _GAPI_SW
+        #if defined(_GAPI_SW) || defined(__MORPHOS__) || defined(__amigaos4__) // ONLY TR1 for now
             ASSERT((version & VER_TR1_PC) == VER_TR1_PC);
             if ((version & VER_TR1_PC) != VER_TR1_PC) {
                 return;

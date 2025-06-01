@@ -10,9 +10,7 @@
 
 #include "game.h"
 static void screenshot(const char *fileName) {
-#if defined(_GAPI_SW)
-//TODO
-#else
+#if defined(_GAPI_GL)
     int width  = Core::width;
 	int height = Core::height;
 	int size = width * height * 4;
@@ -49,6 +47,7 @@ void osMutexUnlock(void *obj) {}
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
+const char *version_tag = "$VER: OpenLara 0.1.0 (xx.xx.2025)\r\n";
 #endif
 
 // timing
@@ -725,11 +724,8 @@ int main(int argc, char **argv) {
 #if defined(_GAPI_SW)
     SDL_DestroyTexture(texture);
     delete[] GAPI::swColor;
-	
 	SDL_DestroyRenderer(sdl_renderer);
-	
 #else
-
 	SDL_GL_DeleteContext(context);
 #endif
     SDL_DestroyWindow(sdl_window);

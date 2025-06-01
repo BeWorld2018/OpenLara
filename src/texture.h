@@ -756,7 +756,7 @@ struct Texture : GAPI::Texture {
             for (uint32 j = 0; j < dh; j++)
                 for (uint32 i = 0; i < dw; i++)
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-                    * dst++ = (i < width && j < height) ? *src++ : 0x000000FF;
+                    *dst++ = (i < width && j < height) ? *src++ : 0x000000FF;
 #else
                     *dst++ = (i < width && j < height) ? *src++ : 0xFF000000;
 #endif
