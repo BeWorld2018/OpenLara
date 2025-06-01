@@ -603,8 +603,8 @@ struct Texture : GAPI::Texture {
         magic = stream.readLE32();
 
         if (magic == FOURCC("RNC\002")) {
-            size  = swap32(stream.read(size));
-            csize = swap32(stream.read(csize));
+            size  = stream.readBE32();
+            csize = stream.readBE32();
             stream.seek(6);
         } else {
             stream.seek(-4);
@@ -617,7 +617,7 @@ struct Texture : GAPI::Texture {
 
         stream.raw(cdata, csize);
 
-        BitStream bs(cdata, csize);
+        BitStream bs(cdata, csize, false); // big endian
         uint8 *dst = data;
         uint8 *end = data + size;
 
@@ -683,7 +683,11 @@ struct Texture : GAPI::Texture {
 
             while (src < end) {
                 uint16 c = *src++;
-                *dst++ = ((c & 0x001F) << 3) | ((c & 0x03E0) << 6) | (((c & 0x7C00) << 9)) | 0xFF000000;
+                uint32 c32 = ((c & 0x001F) << 3) | ((c & 0x03E0) << 6) | (((c & 0x7C00) << 9)) | 0xFF000000;
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+                c32 = swap32(c32);
+#endif
+                *dst++ = c32;
             }
         }
         
