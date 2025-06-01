@@ -9,19 +9,32 @@
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include "game.h"
+
+#define WND_TITLE    			"OpenLara"
+#define SDL_WINDOW_WIDTH        640
+#define SDL_WINDOW_HEIGHT       480
+#define MAX_JOYS 				4
+#define JOY_DEAD_ZONE_STICK     8192
+#define SND_FRAME_SIZE  		4
+#define SND_FRAMES      		256
+#define SND_FREQ				44100
+
+#ifndef OS_PTHREAD_MT
+// multi-threading
+void* osMutexInit() { return NULL; }
+void osMutexFree(void *obj) {}
+void osMutexLock(void *obj) {}
+void osMutexUnlock(void *obj) {}
+#endif
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: OpenLara 0.1.0 (xx.xx.2025)\r\n";
+const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")";
 #endif
 
 bool fullscreen = false;
-
-#include "game.h"
-
-#define WND_TITLE    "OpenLara"
-#define SDL_WINDOW_WIDTH           640
-#define SDL_WINDOW_HEIGHT          480
+int passfull = 0; 
 
 typedef struct {
     SDL_Window *window;
@@ -57,8 +70,6 @@ static void screenshot(const char *fileName) {
 	delete[] data;
 #endif
 }
-
-int passfull = 0; 
 
 void toggleFullscreen() {
     int w, h;
@@ -111,14 +122,10 @@ void toggleFullscreen() {
     passfull = 1;
     Core::width = w;
     Core::height = h;
-    
+ 
 }
 
 // GamePad
-
-#define MAX_JOYS 4
-#define JOY_DEAD_ZONE_STICK      8192
-
 struct sdl_input *sdl_inputs;
 int sdl_numjoysticks, sdl_numgamepads;
 SDL_Joystick *sdl_joysticks[MAX_JOYS];
@@ -295,10 +302,6 @@ int osGetTimeMS() {
 }
 
 // sound
-#define SND_FRAME_SIZE  4
-#define SND_FRAMES      256
-#define FREQ		44100
-
 void sndFill(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount) {
 
 	int count = 0; 
@@ -327,7 +330,7 @@ bool sndInit() {
 	sndData = new Sound::Frame[SND_FRAMES];
 	memset(sndData, 0, SND_FRAMES * SND_FRAME_SIZE);
 
-	desired.freq     = FREQ;
+	desired.freq     = SND_FREQ;
 	desired.format   = SDL_AUDIO_S16;
 	desired.channels = 2;
 

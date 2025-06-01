@@ -7,8 +7,30 @@
 #endif
 
 #include <SDL2/SDL.h>
-
 #include "game.h"
+
+#ifndef OS_PTHREAD_MT
+// multi-threading
+void* osMutexInit() { return NULL; }
+void osMutexFree(void *obj) {}
+void osMutexLock(void *obj) {}
+void osMutexUnlock(void *obj) {}
+#endif
+
+#define WND_TITLE    			"OpenLara"
+#define SDL_WINDOW_WIDTH        800
+#define SDL_WINDOW_HEIGHT       600
+#define SND_FRAME_SIZE  		4
+#define SND_FRAMES      		1024
+#define SND_FREQ				44100
+#define MAX_JOYS 				4
+#define JOY_DEAD_ZONE_STICK     8192
+
+#ifdef __MORPHOS__
+unsigned long _stack = 1024 * 1024 * 2;
+const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")\r\n";
+#endif
+
 static void screenshot(const char *fileName) {
 #if defined(_GAPI_GL)
     int width  = Core::width;
@@ -33,23 +55,6 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
-#ifndef OS_PTHREAD_MT
-// multi-threading
-void* osMutexInit() { return NULL; }
-void osMutexFree(void *obj) {}
-void osMutexLock(void *obj) {}
-void osMutexUnlock(void *obj) {}
-#endif
-
-#define WND_TITLE    "OpenLara"
-#define SDL_WINDOW_WIDTH           640
-#define SDL_WINDOW_HEIGHT          480
-
-#ifdef __MORPHOS__
-unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: OpenLara 0.1.0 (xx.xx.2025)\r\n";
-#endif
-
 // timing
 unsigned int startTime;
 
@@ -60,9 +65,6 @@ int osGetTimeMS() {
 }
 
 // sound
-#define SND_FRAME_SIZE  4
-#define SND_FRAMES      1024
-
 // A Frame is a struct containing: int16 L, int16 R.
 Sound::Frame        *sndData;
 SDL_AudioDeviceID sdl_audiodev;
@@ -76,11 +78,8 @@ void sndFill(void *udata, Uint8 *stream, int len) {
 }
 
 bool sndInit() {
-    int FREQ = 44100;
-
     SDL_AudioSpec desired, obtained;
-
-    desired.freq     = FREQ;
+    desired.freq     = SND_FREQ;
     desired.format   = AUDIO_S16SYS;
     desired.channels = 2;
     desired.samples  = SND_FRAMES;
@@ -117,10 +116,6 @@ void sndFree() {
 }
 
 // Input
-
-#define MAX_JOYS 4
-#define JOY_DEAD_ZONE_STICK      8192
-
 struct sdl_input *sdl_inputs;
 int sdl_numjoysticks, sdl_numcontrollers;
 SDL_Joystick *sdl_joysticks[MAX_JOYS];
@@ -135,7 +130,7 @@ bool fullscreen;
 vec2 joyL, joyR;
 
 bool osJoyReady(int index) {
-    return index == 0; // TODO
+    return index == 0;
 }
 
 void osJoyVibrate(int index, float L, float R) {
@@ -143,7 +138,6 @@ void osJoyVibrate(int index, float L, float R) {
         return;
     if (SDL_IsGameController(index)) {
 #ifdef __MORPHOS__
-		//SDL_Log("L=%f R=%f\n", L, R);
 		L = L * 2;
 		R = R * 2;
 		if (L > 1.0f) L = 1.0f;
@@ -179,7 +173,7 @@ void resize_texture(int w, int h)
         printf("Unable to create the texture\n");
     }
 #else
-		SDL_GL_SwapWindow(sdl_window);
+	SDL_GL_SwapWindow(sdl_window);
 #endif
 
 }
@@ -200,9 +194,6 @@ void toggleFullscreen () {
 	SDL_GetWindowSize(sdl_window, &w, &h);
 	resize_texture(w, h);
 	
-	// SDL_RenderClear(sdl_renderer);
-    // Core::width  = fullscreen ? sdl_displaymode.w : WIN_W;
-    // Core::height = fullscreen ? sdl_displaymode.h : WIN_H;
 }
 #endif
 
@@ -418,16 +409,15 @@ void inputUpdate() {
     while (SDL_PollEvent(&event) == 1) { // while there are still events to be processed
         switch (event.type) 
 		{	
-#ifdef _GAPI_SW
-			case SDL_WINDOWEVENT_RESIZED:
-				int w, h;
-				w = event.window.data1;
-				h = event.window.data2;
-								
-				resize_texture(w, h);
-
+			case SDL_WINDOWEVENT:
+				if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+					int w, h;
+					w = event.window.data1;
+					h = event.window.data2;			
+					resize_texture(w, h);
+				}
 				break;
-#endif
             case SDL_QUIT:
                 Core::isQuit = true;
 				break;
@@ -635,7 +625,7 @@ int main(int argc, char **argv) {
 	sdl_window = SDL_CreateWindow(WND_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 
         #ifndef _GAPI_SW
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
         #else
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE//| SDL_WINDOW_FULLSCREEN_DESKTOP
         #endif
