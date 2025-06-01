@@ -3497,11 +3497,11 @@ namespace TR {
             if (!isCutsceneLevel()) {
                 uint32 offsetTexTiles;
                 stream.seek(8);
-                stream.read(offsetTexTiles);
-            // sound offsets
+                offsetTexTiles = stream.readLE32();
+                // sound offsets
                 uint16 numSounds;
                 stream.setPos(22);
-                stream.read(numSounds);
+                numSounds = stream.readLE16();
                 stream.setPos(2086 + numSounds * 512);
                 soundOffsetsCount = numSounds;
                 soundOffsets = new uint32[soundOffsetsCount];
@@ -3510,7 +3510,7 @@ namespace TR {
                 for (int i = 0; i < soundOffsetsCount; i++) {
                     soundOffsets[i] = soundDataSize;
                     uint16 size;
-                    stream.read(size);
+                    size = stream.readLE16();
                     soundDataSize += soundSize[i] = size * 8;
                 }           
             // sound data
@@ -3520,7 +3520,13 @@ namespace TR {
             }
 
             stream.read(tiles4, tilesCount = 13);
-            stream.read(cluts,  clutsCount = 1024);
+
+            cluts = new CLUT[clutsCount = 1024];
+            for (int i = 0; i < clutsCount; i++) {
+                for (int j = 0; j < 16; j++) {
+                    cluts[i].color[j].value = stream.readLE16();
+                }
+            }
 
             readDataArrays(stream);
             readObjectTex(stream);
@@ -6180,33 +6186,46 @@ namespace TR {
                     mesh.vCount = abs(mesh.vCount);
                     mesh.vertices = new Mesh::Vertex[mesh.vCount];
 
-                    for (int i = 0; i < mesh.vCount; i++)
-                        stream.read(mesh.vertices[i].coord);
+                    for (int i = 0; i < mesh.vCount; i++) {
+                        //stream.read(mesh.vertices[i].coord);
+                        short4& c = mesh.vertices[i].coord;
+                        c.x = stream.readLE16();
+                        c.y = stream.readLE16();
+                        c.z = stream.readLE16();
+                        c.w = stream.readLE16();
+                    }
 
                     for (int i = 0; i < mesh.vCount; i++) {
                         short4 &c = mesh.vertices[i].coord;
                         short4 &n = mesh.vertices[i].normal;
                         if (nCount > 0) { // normal
-                            stream.read(n);
-                            n.w = 1;
+                           // stream.read(n);
+                            n.x = stream.readLE16();
+                            n.y = stream.readLE16();
+                            n.z = stream.readLE16();
+                            n.w = stream.readLE16();
+                           // n.w = 1; // ???
                             c.w = 0x1FFF;
                         } else { // intensity
-                            stream.read(c.w);
+                           // stream.read(c.w);
+                            c.w = stream.readLE16();
                             n = short4( 0, 0, 0, 0 );
                         }
                     }
 
                     if ((version & VER_TR2) && nCount > 0) { // TODO probably for unused meshes only but need to check
                         uint16 crCount = 0, ctCount = 0;
-                        stream.read(crCount);
+                        crCount = stream.readLE16();
                         stream.seek((FACE4_SIZE + 2) * crCount);
-                        stream.read(ctCount);
+                        ctCount = stream.readLE16();
                         stream.seek((FACE3_SIZE + 2) * ctCount);
                     }
 
                     int tmp = stream.pos;
-                    stream.seek(stream.read(mesh.rCount) * FACE4_SIZE); // uint32 colored (not existing in file)
-                    stream.seek(stream.read(mesh.tCount) * FACE3_SIZE);
+                    mesh.rCount = stream.readLE16();
+                    stream.seek(mesh.rCount * FACE4_SIZE); // uint32 colored (not existing in file)
+                    mesh.tCount = stream.readLE16();
+                    stream.seek(mesh.tCount * FACE3_SIZE);
                     stream.setPos(tmp);
 
                     mesh.fCount = mesh.rCount + mesh.tCount;
@@ -6493,7 +6512,20 @@ namespace TR {
                         uint8   x3, y3;
                         uint16  attribute; 
                     } d;
-                    stream.raw(&d, sizeof(d));
+                    //stream.raw(&d, sizeof(d));
+					d.x0 = stream.read();
+					d.y0 = stream.read();
+					d.clut = stream.readLE16();
+					d.x1 = stream.read();   
+					d.y1 = stream.read();
+					d.tile = stream.readLE16(); 
+					d.x2 = stream.read();   
+					d.y2 = stream.read();   
+					d.unknown2 = stream.readLE16(); 
+					d.x3 = stream.read();   
+					d.y3 = stream.read();   
+					d.attribute = stream.readLE16();    
+
                     if (version == VER_TR3_PSX) {
                         if (d.attribute == 0)
                             d.attribute = 0;
@@ -6595,7 +6627,17 @@ namespace TR {
                         uint8   u0, v0;
                         uint8   u1, v1;
                     } d;
-                    stream.raw(&d, sizeof(d));
+                    //stream.raw(&d, sizeof(d));
+                    d.l = stream.readLE16();
+                    d.t = stream.readLE16();
+                    d.r = stream.readLE16();
+                    d.b = stream.readLE16();
+                    d.clut = stream.readLE16();
+                    d.tile = stream.readLE16();
+                    d.u0 = stream.read();
+                    d.v0 = stream.read();
+                    d.u1 = stream.read();
+                    d.v1 = stream.read();
                     SET_PARAMS(t, d, d.clut);
                     t.texCoord[0] = t.texCoordAtlas[0] = short2( d.u0, d.v0 );
                     t.texCoord[1] = t.texCoordAtlas[1] = short2( d.u1, d.v1 );
