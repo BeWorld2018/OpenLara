@@ -385,6 +385,9 @@ struct Level : IGame {
         bool rebuildWater   = settings.detail.water    != Core::settings.detail.water;
         bool switchModels   = settings.detail.simple   != Core::settings.detail.simple;
 
+        bool withFOG = settings.detail.fog;
+        Core::setFog(withFOG);
+
         bool rebuildShaders = rebuildWater || rebuildAmbient || rebuildShadows;
 
         bool redraw = memcmp(&settings.detail, &Core::settings.detail, sizeof(settings.detail)) != 0;

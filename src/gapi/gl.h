@@ -532,6 +532,7 @@ namespace GAPI {
     char GLSL_HEADER_FRAG[512];
 
     bool GL_VER_3 = false;
+    bool withFOG = true;
 
 // Shader
     #ifndef FFP
@@ -1798,22 +1799,22 @@ namespace GAPI {
 
     void setFog(const vec4 &params) {
 #ifdef FFP
-            if (params.w > 0.0f) {
-                glEnable(GL_FOG);
-                GLfloat fogColor[4] = {
-                    clamp(params.x, 0.0f, 1.0f),
-                    clamp(params.y, 0.0f, 1.0f),
-                    clamp(params.z, 0.0f, 1.0f),
-                    1.0f
-                };
-                glFogfv(GL_FOG_COLOR, fogColor);
-                glFogi(GL_FOG_MODE, GL_LINEAR);
-                glFogf(GL_FOG_START, 24.0f);
-                glFogf(GL_FOG_END, 32.0f * 1024.0f);
-            }
-            else {
-                glDisable(GL_FOG);
-            }
+        if (params.w > 0.0f && withFOG) {
+            glEnable(GL_FOG);
+            GLfloat fogColor[4] = {
+                clamp(params.x, 0.0f, 1.0f),
+                clamp(params.y, 0.0f, 1.0f),
+                clamp(params.z, 0.0f, 1.0f),
+                1.0f
+            };
+            glFogfv(GL_FOG_COLOR, fogColor);
+            glFogi(GL_FOG_MODE, GL_LINEAR);
+            glFogf(GL_FOG_START, 24.0f);
+            glFogf(GL_FOG_END, 32.0f * 1024.0f);
+        }
+        else {
+            glDisable(GL_FOG);
+        }
 #endif
     }
 

@@ -412,6 +412,7 @@ namespace Core {
             uint8 scale;
             uint8 vsync;
             uint8 stereo;
+            uint8 fog;
             void setFilter(Quality value) {
                 if (value > MEDIUM && !(support.maxAniso > 1))
                     value = MEDIUM;
@@ -1000,6 +1001,7 @@ namespace Core {
         settings.audio.reverb        = true;
         settings.audio.subtitles     = true;
         settings.audio.language      = defLang;
+        settings.detail.fog          = true;
 
     // player 1
         {
@@ -1146,6 +1148,11 @@ namespace Core {
 
     void setVSync(bool enable) {
         GAPI::setVSync((Core::settings.detail.vsync = enable));
+    }
+
+    void setFog(bool enable) {
+        Core::settings.detail.fog = enable;
+        GAPI::withFOG = enable;
     }
 
     void waitVBlank() {
