@@ -3359,7 +3359,7 @@ namespace TR {
                 LOG("level format version %s\n", versionstr);
             }
 
-        #if defined(_GAPI_SW) || defined(__MORPHOS__) || defined(__amigaos4__) // ONLY TR1 for now
+        #if defined(_GAPI_SW)
             ASSERT((version & VER_TR1_PC) == VER_TR1_PC);
             if ((version & VER_TR1_PC) != VER_TR1_PC) {
                 return;
@@ -3370,6 +3370,14 @@ namespace TR {
             ASSERT((version & VER_TR1_PSX) == VER_TR1_PSX);
             if ((version & VER_TR1_PSX) != VER_TR1_PSX) {
                 return;
+            }
+        #endif
+
+        #if defined(__MORPHOS__) || defined(__amigaos4__) // ONLY TR1 for now
+        	if ( ((version & VER_TR1_PC) != VER_TR1_PC) && ((version & VER_TR1_PSX) != VER_TR1_PSX)) {
+                version = VER_UNKNOWN;
+                return;
+            
             }
         #endif
 

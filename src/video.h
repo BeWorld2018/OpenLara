@@ -945,8 +945,9 @@ struct Video {
                 } else {
                     AudioChunk *chunk = audioChunks + (audioChunksCount++ % MAX_CHUNKS);
 
-                    memcpy(chunk->data, &sector, sizeof(sector)); // audio chunk has no sector header (just XA data)
-                    stream->raw(chunk->data + sizeof(sector), AUDIO_SECTOR_SIZE - sizeof(sector)); // !!! MUST BE 2304 !!! most of CD image tools copy only 2048 per sector, so "clicks" will be there
+                    stream->seek(-(int)sizeof(sector)); // audio chunk has no sector header (just XA data)
+                    stream->raw(chunk->data, AUDIO_SECTOR_SIZE); // !!! MUST BE 2304 !!! most of CD image tools copy only 2048 per sector, so "clicks" will be there
+
                     chunk->size = AUDIO_SECTOR_SIZE;
                     stream->seek(24);
 

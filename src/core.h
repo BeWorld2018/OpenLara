@@ -294,7 +294,7 @@ extern int   osGetTimeMS     ();
 extern bool  osJoyReady      (int index);
 extern void  osJoyVibrate    (int index, float L, float R);
 
-#if defined(__SDL3__) || defined(_OS_WIN)
+#if defined(__SDL2__) || defined(__SDL3__) || defined(_OS_WIN)
 extern void  osToggleFullscreen(bool enable);
 #endif
 
@@ -1008,7 +1008,7 @@ namespace Core {
         settings.audio.subtitles     = true;
         settings.audio.language      = defLang;
         settings.detail.fog          = true;
-        settings.detail.displaymode = Settings::DisplayMode::DM_WINDOWED;
+        settings.detail.displaymode  = Settings::DisplayMode::DM_WINDOWED;
 
     // player 1
         {

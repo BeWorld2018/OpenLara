@@ -11,10 +11,10 @@
 
 #ifndef OS_PTHREAD_MT
 // multi-threading
-void* osMutexInit() { return NULL; }
-void osMutexFree(void *obj) {}
-void osMutexLock(void *obj) {}
-void osMutexUnlock(void *obj) {}
+void* osMutexInit() { return SDL_CreateMutex(); }
+void osMutexFree(void *obj) { SDL_DestroyMutex((SDL_mutex *)obj); }
+void osMutexLock(void *obj) { SDL_LockMutex((SDL_mutex *)obj); }
+void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_mutex *)obj); }
 #endif
 
 #define WND_TITLE    			"OpenLara"
@@ -28,7 +28,7 @@ void osMutexUnlock(void *obj) {}
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")\r\n";
+const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")";
 #endif
 
 static void screenshot(const char *fileName) {
@@ -179,12 +179,12 @@ void resize_texture(int w, int h)
 }
 
 #ifndef _GAPI_GLES 
-void toggleFullscreen () {
+void osToggleFullscreen(bool enable) {
 
     Uint32 flags = 0;
 	int w, h;
     
-	fullscreen = !fullscreen;
+	fullscreen = enable;
 
     flags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
@@ -431,7 +431,9 @@ void inputUpdate() {
 #ifndef _GAPI_GLES 
                 if (scancode == SDL_SCANCODE_RETURN) {
                     if (isKeyPressed(SDL_SCANCODE_RALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
-                        toggleFullscreen();
+                    	fullscreen = !fullscreen;
+                        osToggleFullscreen(fullscreen);
+                        Core::settings.detail.displaymode = fullscreen ? 1 : 0;
                     }
                 }
 				if (scancode == SDL_SCANCODE_F1) {
