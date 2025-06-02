@@ -385,6 +385,8 @@ struct Level : IGame {
         bool rebuildWater   = settings.detail.water    != Core::settings.detail.water;
         bool switchModels   = settings.detail.simple   != Core::settings.detail.simple;
 
+        Core::settings = settings;
+
         bool withFOG = settings.detail.fog;
         Core::setFog(withFOG);
 
@@ -394,14 +396,15 @@ struct Level : IGame {
 
         bool toggleVR = (settings.detail.stereo == Core::Settings::STEREO_VR) ^ (Core::settings.detail.stereo == Core::Settings::STEREO_VR);
 
-        Core::settings = settings;
+        Core::setChangeMode();
+        Core::setChangeDisplayMode();
+
+       
+        Core::setVSync(Core::settings.detail.vsync != 0);
 
         if (toggleVR) {
             osToggleVR(Core::settings.detail.stereo == Core::Settings::STEREO_VR);
         }
-
-        Core::setVSync(Core::settings.detail.vsync != 0);
-        Core::setChangeDisplayMode();
 
         Stream::cacheWrite("settings", (char*)&settings, sizeof(settings));
 

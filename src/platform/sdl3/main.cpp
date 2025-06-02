@@ -79,10 +79,35 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
-void toggleFullscreen() {
-    int w, h;
+/*void osListScreenMode() {
+    SDL_DisplayID displayID = SDL_GetPrimaryDisplay(); 
+    int nbModes = 0;
+	Core::screenModesCount = 0;
+    SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(displayID, &nbModes);
 
-    fullscreen = !fullscreen;
+	for (int i = 0; i < nbModes; ++i) {
+        SDL_DisplayMode *mode = modes[i];
+
+        // Optionnel : filtrer les doublons ou petites résolutions
+        if (mode->w >= 640 && mode->h >= 480) {
+            Core::screenModes[Core::screenModesCount++] = { mode->w, mode->h };
+
+            SDL_Log("Mode %d : %dx%d @%.0fHz (density=%.2f)",
+                i, mode->w, mode->h, mode->refresh_rate, mode->pixel_density);
+        }
+    }
+}*/
+
+void osWindowResize(int w, int h) {
+    
+	SDL_SetWindowSize(as->window, w, h);
+	SDL_SetWindowPosition(as->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	passfull = 1;
+    Core::width = w;
+    Core::height = h;
+	
+}
+
 
 void osToggleFullscreen(bool enable) {
     int w, h;
@@ -133,7 +158,6 @@ void osToggleFullscreen(bool enable) {
     passfull = 1;
     Core::width = w;
     Core::height = h;
- 
 }
 
 // GamePad

@@ -111,6 +111,7 @@ void loadSettings(Stream *stream, void *userData) {
     Core::settings.version = SETTINGS_VERSION;
     Core::setVSync(Core::settings.detail.vsync != 0);
     GAPI::withFOG = Core::settings.detail.fog;
+    Core::setChangeMode();
     Core::setChangeDisplayMode();
 
     #if defined(_GAPI_SW) || defined(_GAPI_GU)

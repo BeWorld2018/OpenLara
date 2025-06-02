@@ -86,6 +86,7 @@ enum StringID {
     , STR_OPT_FOG
     , STR_OPT_DETAIL_VSYNC
     , STR_OPT_MODE
+    , STR_OPT_SCALE
     , STR_OPT_DETAIL_STEREO
     , STR_OPT_SIMPLE_ITEMS
     , STR_OPT_RESOLUTION
@@ -314,9 +315,11 @@ const char* helpText =
 "DOZY on - Look & Duck & Action & Jump@"
 "DOZY off - Walk@"
 "Free Camera - hold L & R stick@"
-"@"
 #ifdef __MORPHOS__
+"@"
 "Enhanced MorphOS SDL3 version by BeWorld/BSzili - 2025";
+#else
+"";
 #endif
 
 #include "lang/en.h"

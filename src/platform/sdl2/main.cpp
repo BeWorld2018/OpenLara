@@ -28,7 +28,7 @@ void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_mutex *)obj); }
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")\r\n";
+const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")";
 #endif
 
 static void screenshot(const char *fileName) {
@@ -178,13 +178,21 @@ void resize_texture(int w, int h)
 
 }
 
+void osWindowResize(int w, int h) {
+    
+	SDL_SetWindowSize(sdl_window, w, h);
+	SDL_SetWindowPosition(sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	resize_texture(w, h);
+	
+}
+
 #ifndef _GAPI_GLES 
-void toggleFullscreen () {
+void osToggleFullscreen(bool enable) {
 
     Uint32 flags = 0;
 	int w, h;
     
-	fullscreen = !fullscreen;
+	fullscreen = enable;
 
     flags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
@@ -431,7 +439,9 @@ void inputUpdate() {
 #ifndef _GAPI_GLES 
                 if (scancode == SDL_SCANCODE_RETURN) {
                     if (isKeyPressed(SDL_SCANCODE_RALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
-                        toggleFullscreen();
+                    	fullscreen = !fullscreen;
+                        osToggleFullscreen(fullscreen);
+                        Core::settings.detail.displaymode = fullscreen ? 1 : 0;
                     }
                 }
 				if (scancode == SDL_SCANCODE_F1) {

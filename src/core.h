@@ -294,9 +294,15 @@ extern int   osGetTimeMS     ();
 extern bool  osJoyReady      (int index);
 extern void  osJoyVibrate    (int index, float L, float R);
 
-#if defined(__SDL3__) || defined(_OS_WIN)
+#if defined(__SDL2__) || defined(__SDL3__) || defined(_OS_WIN)
 extern void  osToggleFullscreen(bool enable);
+extern void  osWindowResize(int w, int h);
 #endif
+
+struct ScreenMode {
+    int width;
+    int height;
+};
 
 #define OS_LOCK(mutex) Core::Lock _lock(mutex)
 
@@ -393,14 +399,26 @@ namespace Core {
 #endif
     } support;
 
-#define SETTINGS_VERSION 7
+#define SETTINGS_VERSION 8
 #define SETTINGS_READING 0xFF
+
+    static ScreenMode screenModes[] = {
+        {640, 480},
+        {800, 600},
+        {1024, 768},
+        {1280, 720},
+        {1280, 1024},
+        {1400, 1050},
+        {1680, 1050},
+        {1920, 1080}
+    };
 
     struct Settings {
         enum Quality  { LOW, MEDIUM, HIGH };
         enum Stereo   { STEREO_OFF, STEREO_SBS, STEREO_ANAGLYPH, STEREO_SPLIT, STEREO_VR };
         enum Scale    { SCALE_25, SCALE_50, SCALE_75, SCALE_100 };
         enum DisplayMode { DM_WINDOWED, DM_FULLSCREEN };
+
         uint8 version;
 
         struct {
@@ -419,6 +437,7 @@ namespace Core {
             uint8 stereo;
             uint8 fog;
             uint8 displaymode;
+            uint8 screenmode;
             void setFilter(Quality value) {
                 if (value > MEDIUM && !(support.maxAniso > 1))
                     value = MEDIUM;
@@ -856,6 +875,7 @@ namespace Core {
 
     static const char *version = __DATE__;
     static int defLang = 0;
+    static int defscreenMode = 0;
 
     void readPerlinAsync(Stream *stream, void *userData) {
         int size = PERLIN_TEX_SIZE * PERLIN_TEX_SIZE * PERLIN_TEX_SIZE;
@@ -1009,7 +1029,7 @@ namespace Core {
         settings.audio.language      = defLang;
         settings.detail.fog          = true;
         settings.detail.displaymode  = Settings::DisplayMode::DM_WINDOWED;
-
+        settings.detail.screenmode   = defscreenMode;
     // player 1
         {
             Settings::Controls &ctrl = settings.controls[0];
@@ -1158,11 +1178,12 @@ namespace Core {
     }
 
     void setChangeDisplayMode() {
-
         GAPI::setFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN);
-
     }
 
+    void setChangeMode() {
+        GAPI::setWindowSize(Core::settings.detail.screenmode);
+    }
 
     void setFog(bool enable) {
         Core::settings.detail.fog = enable;

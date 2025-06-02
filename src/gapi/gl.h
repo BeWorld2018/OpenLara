@@ -1695,9 +1695,18 @@ namespace GAPI {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void setFullscreen(bool enable) {
-#if defined(_OS_WIN) ||  defined(__SDL3__)
+    void setFullscreen(bool enable) { 
+#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
         osToggleFullscreen(enable);
+#endif
+    }
+
+    void setWindowSize(int resolution) {
+#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
+        int w, h;
+        w = Core::screenModes[Core::settings.detail.screenmode].width;
+        h = Core::screenModes[Core::settings.detail.screenmode].height;
+        osWindowResize(w, h);
 #endif
     }
 

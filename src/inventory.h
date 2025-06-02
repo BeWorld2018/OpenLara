@@ -60,26 +60,33 @@ struct OptionItem {
     }
 
     float drawParam(float x, float y, float w, StringID oStr, bool active, uint8 value) const {
+
         if (oStr != STR_EMPTY) {
             UI::textOut(vec2(x + 32.0f, y), oStr);
-            x = x + w * 0.5f;
+            x += w * 0.5f;
             w = w * 0.5f - 32.0f;
         }
 
-        StringID vStr = StringID(color + int(value));
-
         uint8 alpha = 255;
-        if (type == TYPE_KEY && waitForKey == this) {
-            vStr = STR_PRESS_ANY_KEY;
-            float t = (Core::getTime() % 1000) / 1000.0f;
-            t = 0.2f + (sinf(t * PI * 2) * 0.5f + 0.5f) * 0.8f;
-            alpha = uint8(t * 255.0f);
+        StringID vStr = StringID(color + int(value));
+        int maxWidth = 0;
+        char buffer[16];
+        if (oStr == STR_OPT_RESOLUTION) {
+            sprintf(buffer, "%dx%d", Core::screenModes[value].width, Core::screenModes[value].height);
+        } else {
+            if (type == TYPE_KEY && waitForKey == this) {
+                vStr = STR_PRESS_ANY_KEY;
+                float t = (Core::getTime() % 1000) / 1000.0f;
+                t = 0.2f + (sinf(t * PI * 2) * 0.5f + 0.5f) * 0.8f;
+                alpha = uint8(t * 255.0f);
+            }
+            strcpy(buffer, STR[vStr]);
         }
 
-        UI::textOut(vec2(x, y), vStr, UI::aCenter, w, alpha, UI::SHADE_GRAY); // color as StringID
+        UI::textOut(vec2(x, y), buffer, UI::aCenter, w, alpha, UI::SHADE_GRAY); // color as StringID
+        maxWidth = UI::getTextSize(buffer).x;
 
         if (type == TYPE_PARAM && active) {
-            int maxWidth = UI::getTextSize(STR[color + value]).x;
             maxWidth = maxWidth / 2 + 8;
             x += w * 0.5f;
             if (maxValue != 0xFF) {
@@ -87,6 +94,7 @@ struct OptionItem {
                 if (checkValue(value + 1)) UI::specOut(vec2(x + maxWidth, y), 109);
             }
         }
+
         return y + LINE_HEIGHT;
     }
 
@@ -147,8 +155,11 @@ static const OptionItem optDetail[] = {
 #endif
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_SIMPLE_ITEMS,    SETTINGS( detail.simple    ), STR_OFF, 0, 1 ),
     OptionItem(),
-#if defined(__SDL3__) || defined(_OS_WIN)
+#if defined(__SDL3__) || defined(__SDL2__) || defined(_OS_WIN)
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_MODE,            SETTINGS(detail.displaymode), STR_DISPLAYMODE_WINDOWED, 0, 1),
+#if defined(__SDL3__) || defined(__SDL2__) // TODO :: || defined(_OS_WIN)
+    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, 7),
+#endif
 #endif
 #ifdef INV_QUALITY
 #ifndef FFP
