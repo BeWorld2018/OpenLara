@@ -675,22 +675,29 @@ struct Texture : GAPI::Texture {
         height = 256;
         width  = uint32(dst - data) / height / 2;
 
-        uint32 *data32 = new uint32[width * height];
+        Color32* data32 = new Color32[width * height];
         {
-            uint32 *dst = data32;
+            Color32* dst = data32;
             uint16 *src = (uint16*)data;
             uint16 *end = src + width * height;
-
             while (src < end) {
-                uint16 c = *src++;
-                uint32 c32 = ((c & 0x001F) << 3) | ((c & 0x03E0) << 6) | (((c & 0x7C00) << 9)) | 0xFF000000;
+                Color16 c(*src++);
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-                c32 = swap32(c32);
+                c.value = swap16(c.value);
+                dst->r = c.b() << 3;
+                dst->g = c.g() << 3;
+                dst->b = c.r() << 3;
+                dst->a = 255;
+#else
+                dst->r = c.b() << 3;
+                dst->g = c.g() << 3;
+                dst->b = c.r() << 3;
+                dst->a = 255;
 #endif
-                *dst++ = c32;
+                dst++;
             }
         }
-        
+
         delete[] data;
 
         return (uint8*)data32;
