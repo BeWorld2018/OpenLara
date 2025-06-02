@@ -34,7 +34,15 @@ const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")";
 #endif
 
 bool fullscreen = false;
-int passfull = 0; 
+int passfull = 0;
+bool withaudio = true;
+
+struct AudioContext {
+    SDL_AudioStream *stream;
+    Sound::Frame *sndData;
+};
+
+AudioContext audioCtx;
 
 typedef struct {
     SDL_Window *window;
@@ -304,47 +312,62 @@ int osGetTimeMS() {
 // sound
 void sndFill(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount) {
 
-	int count = 0; 
-	if (!additional_amount) {
-		return;
-	}
-	while (additional_amount > 0) {
-		count = (additional_amount / SND_FRAME_SIZE > SND_FRAMES) ? SND_FRAMES : additional_amount / SND_FRAME_SIZE;
-		Sound::fill((Sound::Frame*) userdata, count);
-		if (!SDL_PutAudioStreamData(stream, userdata, count * SND_FRAME_SIZE)) {
-			LOG("Couldn't flush audio stream: %s", SDL_GetError());
+	if (withaudio) {
+		int count = 0; 
+		if (!additional_amount) {
 			return;
 		}
-		additional_amount -= count * SND_FRAME_SIZE;
+		while (additional_amount > 0) {
+			count = (additional_amount / SND_FRAME_SIZE > SND_FRAMES) ? SND_FRAMES : additional_amount / SND_FRAME_SIZE;
+			Sound::fill((Sound::Frame*) userdata, count);
+			if (!SDL_PutAudioStreamData(stream, userdata, count * SND_FRAME_SIZE)) {
+				LOG("Couldn't flush audio stream: %s", SDL_GetError());
+				return;
+			}
+			additional_amount -= count * SND_FRAME_SIZE;
+		}
 	}
-	
 }
 
 bool sndInit() {
 
+	if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+		LOG("Couldn't init SDL audio: %s", SDL_GetError());
+		return false;
+	}
+
 	SDL_AudioSpec desired;
-	SDL_AudioStream *stream;
-	Sound::Frame        *sndData;
-
-	// Initialize audio buffer and fill it with zeros
-	sndData = new Sound::Frame[SND_FRAMES];
-	memset(sndData, 0, SND_FRAMES * SND_FRAME_SIZE);
-
 	desired.freq     = SND_FREQ;
 	desired.format   = SDL_AUDIO_S16;
 	desired.channels = 2;
-
-	stream = SDL_OpenAudioDeviceStream( SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK , &desired, sndFill, sndData );
 	
-	if (!stream) {
+	audioCtx.sndData = new Sound::Frame[SND_FRAMES];
+	memset(audioCtx.sndData, 0, SND_FRAMES * SND_FRAME_SIZE);
+
+	audioCtx.stream = SDL_OpenAudioDeviceStream( SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK , &desired, sndFill, audioCtx.sndData );
+	
+	if (!audioCtx.stream) {
 		LOG("Couldn't create audio stream: %s\n", SDL_GetError());
+		delete[] audioCtx.sndData;
+		audioCtx.sndData = nullptr;
 		return false;
 	}
-	
-    SDL_ResumeAudioStreamDevice(stream);
+
+    SDL_ResumeAudioStreamDevice(audioCtx.stream);
 	return true;
 	
 };
+
+void sndFree() {
+	if (audioCtx.stream) {
+        SDL_DestroyAudioStream(audioCtx.stream);
+        audioCtx.stream = nullptr;
+    }
+   if (audioCtx.sndData) {
+        delete[] audioCtx.sndData;
+        audioCtx.sndData = nullptr;
+    }
+}
 
 //input 
 
@@ -480,7 +503,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
 	SDL_SetAppMetadata("OpenLara SDL3", "1.0", "info.xproger.openlara");
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
 		LOG("Couldn't init SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -523,7 +546,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 	SDL_HideCursor();
 
     if (!sndInit()) {
-	//return SDL_APP_FAILURE;
+		withaudio = false;
     }
 	
 	inputInit();
@@ -635,6 +658,8 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
     LOG("Exiting\n");
     
+	sndFree();
+	
     Game::deinit();
     
     if (appstate != NULL) {
