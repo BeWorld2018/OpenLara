@@ -826,7 +826,9 @@ struct Video {
             buildLUT(AC_LUT_9, 62, 110, 9);
 
             uint32 syncMagic[3];
-            stream->raw(syncMagic, sizeof(syncMagic));
+            syncMagic[0] = stream->readLE32();
+            syncMagic[1] = stream->readLE32();
+            syncMagic[2] = stream->readLE32();
             stream->seek(-(int)sizeof(syncMagic));
 
             hasSyncHeader = syncMagic[0] == 0xFFFFFF00 && syncMagic[1] == 0xFFFFFFFF && syncMagic[2] == 0x00FFFFFF;
@@ -898,7 +900,19 @@ struct Video {
                 }
 
                 Sector sector;
-                stream->raw(&sector, sizeof(Sector));
+                //stream->raw(&sector, sizeof(Sector));
+                sector.magic = stream->readLE32();
+                sector.chunkIndex = stream->readLE16();
+                sector.chunksCount = stream->readLE16();
+                sector.frameIndex = stream->readLE32();
+                sector.chunkSize = stream->readLE32();
+                sector.width = stream->readLE16();
+                sector.height = stream->readLE16();
+                sector.blocks = stream->readLE16();
+                sector.unk3800 = stream->readLE16();
+                sector.qscale = stream->readLE16();
+                sector.version = stream->readLE16();
+                sector.unk00000000 = stream->readLE32();
 
                 if (sector.magic == MAGIC_STR)
                 {

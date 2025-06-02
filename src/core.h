@@ -73,7 +73,8 @@
         #define DYNGEOM_NO_VBO
     #endif
     #define INV_QUALITY
-    #define INV_STEREO
+    #define INV_VIBRATION
+    #define INV_SINGLE_PLAYER 
     #ifdef __MORPHOS__
         #undef USE_CUBEMAP_MIPS
         #undef OS_PTHREAD_MT
@@ -86,8 +87,8 @@
     #define _GAPI_GL   1
     #define FFP 1
     #define INV_QUALITY
-    #define INV_STEREO
-    
+    #define INV_VIBRATION
+    #define INV_SINGLE_PLAYER
     #ifdef __MORPHOS__
         #undef USE_CUBEMAP_MIPS
         #undef OS_PTHREAD_MT
