@@ -644,6 +644,24 @@ int checkLanguage() {
     return str - STR_LANG_EN;
 }
 
+void osToggleFullscreen(bool enable) {
+    static WINDOWPLACEMENT pLast;
+    DWORD style = GetWindowLong(hWnd, GWL_STYLE);
+    if (enable) {
+        MONITORINFO mInfo = { sizeof(mInfo) };
+        if (GetWindowPlacement(hWnd, &pLast) && GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY), &mInfo)) {
+            RECT& r = mInfo.rcMonitor;
+            SetWindowLong(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+            MoveWindow(hWnd, r.left, r.top, r.right - r.left, r.bottom - r.top, FALSE);
+        }
+    }
+    else {
+        SetWindowLong(hWnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(hWnd, &pLast);
+    }
+
+}
+
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         // window
@@ -684,19 +702,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_SYSKEYDOWN :
         case WM_SYSKEYUP   :
             if (msg == WM_SYSKEYDOWN && wParam == VK_RETURN) { // Alt + Enter - switch to fullscreen or window
-                static WINDOWPLACEMENT pLast;
                 DWORD style = GetWindowLong(hWnd, GWL_STYLE);
-                if (style & WS_OVERLAPPEDWINDOW) {
-                    MONITORINFO mInfo = { sizeof(mInfo) };
-                    if (GetWindowPlacement(hWnd, &pLast) && GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY), &mInfo)) {
-                        RECT &r = mInfo.rcMonitor;
-                        SetWindowLong(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
-                        MoveWindow(hWnd, r.left, r.top, r.right - r.left, r.bottom - r.top, FALSE);
-                    }
-                } else {
-                    SetWindowLong(hWnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
-                    SetWindowPlacement(hWnd, &pLast);
-                }
+                bool enable = (style & WS_OVERLAPPEDWINDOW);
+                osToggleFullscreen(enable);
+                // Settings ?!
+                Core::settings.detail.displaymode = enable ? 1 : 0;
                 break;
             }
             if (msg == WM_SYSKEYDOWN && wParam == VK_F4) { // Alt + F4 - close application

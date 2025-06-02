@@ -294,6 +294,10 @@ extern int   osGetTimeMS     ();
 extern bool  osJoyReady      (int index);
 extern void  osJoyVibrate    (int index, float L, float R);
 
+#if defined(__SDL3__) || defined(_OS_WIN)
+extern void  osToggleFullscreen(bool enable);
+#endif
+
 #define OS_LOCK(mutex) Core::Lock _lock(mutex)
 
 enum InputKey { ikNone,
@@ -396,7 +400,7 @@ namespace Core {
         enum Quality  { LOW, MEDIUM, HIGH };
         enum Stereo   { STEREO_OFF, STEREO_SBS, STEREO_ANAGLYPH, STEREO_SPLIT, STEREO_VR };
         enum Scale    { SCALE_25, SCALE_50, SCALE_75, SCALE_100 };
-
+        enum DisplayMode { DM_WINDOWED, DM_FULLSCREEN };
         uint8 version;
 
         struct {
@@ -414,6 +418,7 @@ namespace Core {
             uint8 vsync;
             uint8 stereo;
             uint8 fog;
+            uint8 displaymode;
             void setFilter(Quality value) {
                 if (value > MEDIUM && !(support.maxAniso > 1))
                     value = MEDIUM;
@@ -1003,6 +1008,7 @@ namespace Core {
         settings.audio.subtitles     = true;
         settings.audio.language      = defLang;
         settings.detail.fog          = true;
+        settings.detail.displaymode = Settings::DisplayMode::DM_WINDOWED;
 
     // player 1
         {
@@ -1150,6 +1156,13 @@ namespace Core {
     void setVSync(bool enable) {
         GAPI::setVSync((Core::settings.detail.vsync = enable));
     }
+
+    void setChangeDisplayMode() {
+
+        GAPI::setFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN);
+
+    }
+
 
     void setFog(bool enable) {
         Core::settings.detail.fog = enable;

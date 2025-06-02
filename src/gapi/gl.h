@@ -1695,6 +1695,12 @@ namespace GAPI {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+    void setFullscreen(bool enable) {
+#if defined(_OS_WIN) ||  defined(__SDL3__)
+        osToggleFullscreen(enable);
+#endif
+    }
+
     void setVSync(bool enable) {
         #ifdef _OS_WIN
             if (wglSwapIntervalEXT) wglSwapIntervalEXT(enable ? 1 : 0);

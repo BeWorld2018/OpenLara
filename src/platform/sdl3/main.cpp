@@ -84,7 +84,10 @@ void toggleFullscreen() {
 
     fullscreen = !fullscreen;
 
-    if (fullscreen) {
+void osToggleFullscreen(bool enable) {
+    int w, h;
+	fullscreen = enable;
+    if (enable) {
         SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
 
         int windowW, windowH;
@@ -585,7 +588,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			key = codeToInputKey(scancode);
 			
 			if (event->key.mod & SDL_KMOD_ALT && scancode == SDL_SCANCODE_RETURN) {
-	            toggleFullscreen();
+				fullscreen = !fullscreen;
+
+	            osToggleFullscreen(fullscreen);
+				// Settings ?!
+				Core::settings.detail.displaymode = fullscreen ? 1 : 0;
 	            break;
 			}
 			

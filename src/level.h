@@ -401,6 +401,7 @@ struct Level : IGame {
         }
 
         Core::setVSync(Core::settings.detail.vsync != 0);
+        Core::setChangeDisplayMode();
 
         Stream::cacheWrite("settings", (char*)&settings, sizeof(settings));
 

@@ -148,7 +148,10 @@ static const OptionItem optDetail[] = {
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_SIMPLE_ITEMS,    SETTINGS( detail.simple    ), STR_OFF, 0, 1 ),
 #ifdef INV_QUALITY
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS( detail.scale     ), STR_SCALE_100, 0, 3 ),
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_VSYNC,    SETTINGS( detail.vsync     ), STR_OFF, 0, 1 ),
+    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_VSYNC,    SETTINGS( detail.vsync     ), STR_OFF, 0, 1 ), 
+#endif
+#if defined(__SDL3__) || defined(_OS_WIN)
+    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_MODE,            SETTINGS(detail.displaymode), STR_DISPLAYMODE_WINDOWED, 0, 1),
 #endif
 #ifdef INV_STEREO
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_STEREO,   SETTINGS( detail.stereo    ), STR_NO_STEREO, 0, 
