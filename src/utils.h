@@ -1552,7 +1552,11 @@ union ColorCLUT { // RGBA5551
 };
 
 struct ColorIndex4 {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    uint8 b : 4, a : 4;
+#else
     uint8 a:4, b:4;
+#endif
 };
 
 struct Tile4 {
