@@ -331,7 +331,7 @@ void sndFill(void *userdata, SDL_AudioStream *stream, int additional_amount, int
 
 bool sndInit() {
 
-	if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+	if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
 		LOG("Couldn't init SDL audio: %s", SDL_GetError());
 		return false;
 	}
