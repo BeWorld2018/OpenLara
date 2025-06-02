@@ -1537,9 +1537,11 @@ union Color16 { // RGBA5551
 };
 
 union ColorCLUT { // RGBA5551
-
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    struct { uint16 a : 1, b : 5, g : 5, r : 5; };
+#else
     struct { uint16 r : 5, g : 5, b : 5, a : 1; };
-
+#endif
     uint16 value;
 
     ColorCLUT() {}

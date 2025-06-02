@@ -6203,8 +6203,8 @@ namespace TR {
                             n.x = stream.readLE16();
                             n.y = stream.readLE16();
                             n.z = stream.readLE16();
-                            n.w = stream.readLE16();
-                           // n.w = 1; // ???
+                            stream.readLE16();
+                            n.w = 1;
                             c.w = 0x1FFF;
                         } else { // intensity
                            // stream.read(c.w);
