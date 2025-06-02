@@ -1008,7 +1008,7 @@ namespace Core {
         settings.audio.subtitles     = true;
         settings.audio.language      = defLang;
         settings.detail.fog          = true;
-        settings.detail.displaymode = Settings::DisplayMode::DM_WINDOWED;
+        settings.detail.displaymode  = Settings::DisplayMode::DM_WINDOWED;
 
     // player 1
         {

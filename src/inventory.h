@@ -136,22 +136,25 @@ struct OptionItem {
 static const OptionItem optDetail[] = {
     OptionItem( OptionItem::TYPE_TITLE,  STR_SELECT_DETAIL ),
     OptionItem( ),
-#ifdef INV_QUALITY
+#if defined(INV_QUALITY) && !defined(FFP)
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_FILTER,   SETTINGS( detail.filter    ), STR_QUALITY_LOW, 0, 2 ),
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_LIGHTING, SETTINGS( detail.lighting  ), STR_QUALITY_LOW, 0, 2 ),
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_SHADOWS,  SETTINGS( detail.shadows   ), STR_QUALITY_LOW, 0, 2 ),
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_WATER,    SETTINGS( detail.water     ), STR_QUALITY_LOW, 0, 2 ),
-#ifdef FFP
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_FOG,             SETTINGS( detail.fog	     ), STR_OFF, 0, 1),
 #endif
+#ifdef FFP
+    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_FOG,             SETTINGS(detail.fog), STR_OFF, 0, 1),
 #endif
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_SIMPLE_ITEMS,    SETTINGS( detail.simple    ), STR_OFF, 0, 1 ),
-#ifdef INV_QUALITY
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS( detail.scale     ), STR_SCALE_100, 0, 3 ),
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_VSYNC,    SETTINGS( detail.vsync     ), STR_OFF, 0, 1 ), 
-#endif
+    OptionItem(),
 #if defined(__SDL3__) || defined(_OS_WIN)
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_MODE,            SETTINGS(detail.displaymode), STR_DISPLAYMODE_WINDOWED, 0, 1),
+#endif
+#ifdef INV_QUALITY
+#ifndef FFP
+    OptionItem(OptionItem::TYPE_PARAM,  STR_OPT_SCALE,      SETTINGS(detail.scale), STR_SCALE_100, 0, 3),
+#endif
+    OptionItem(OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_VSYNC,    SETTINGS(detail.vsync), STR_OFF, 0, 1),
 #endif
 #ifdef INV_STEREO
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_DETAIL_STEREO,   SETTINGS( detail.stereo    ), STR_NO_STEREO, 0, 

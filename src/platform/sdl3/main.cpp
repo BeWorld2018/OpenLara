@@ -22,10 +22,10 @@
 
 #ifndef OS_PTHREAD_MT
 // multi-threading
-void* osMutexInit() { return NULL; }
-void osMutexFree(void *obj) {}
-void osMutexLock(void *obj) {}
-void osMutexUnlock(void *obj) {}
+void* osMutexInit() { return SDL_CreateMutex(); }
+void osMutexFree(void *obj) { SDL_DestroyMutex((SDL_Mutex *)obj); }
+void osMutexLock(void *obj) { SDL_LockMutex((SDL_Mutex *)obj); }
+void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_Mutex *)obj); }
 #endif
 
 #ifdef __MORPHOS__
@@ -91,7 +91,7 @@ void osToggleFullscreen(bool enable) {
         SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
 
         int windowW, windowH;
-        SDL_GetWindowSizeInPixels(as->window, &windowW, &windowH);
+        SDL_GetWindowSize(as->window, &windowW, &windowH);
 
         int num_modes = 0;
         SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
@@ -504,7 +504,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gettimeofday(&t, NULL);
     startTime = t.tv_sec;
 
-	SDL_SetAppMetadata("OpenLara SDL3", "1.0", "info.xproger.openlara");
+	SDL_SetAppMetadata("OpenLara SDL3", "1.1", "info.xproger.openlara");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
 		LOG("Couldn't init SDL: %s", SDL_GetError());

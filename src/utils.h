@@ -1951,7 +1951,7 @@ public:
         this->name = StrUtils::copy(name);
     }
 
-    Stream(const char *name, Callback *callback = NULL, void *userData = NULL) : callback(callback), userData(userData), f(NULL), data(NULL), name(NULL), size(-1), pos(0), buffer(NULL), buffering(true), baseOffset(0) {
+    Stream(const char *name, Callback *callback = NULL, void *userData = NULL) : callback(callback), userData(userData), f(NULL), data(NULL), name(NULL), size(-1), pos(0), buffer(NULL), buffering(false), baseOffset(0) {
         if (!name && callback) {
             callback(NULL, userData);
             delete this;

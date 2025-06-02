@@ -11,10 +11,10 @@
 
 #ifndef OS_PTHREAD_MT
 // multi-threading
-void* osMutexInit() { return NULL; }
-void osMutexFree(void *obj) {}
-void osMutexLock(void *obj) {}
-void osMutexUnlock(void *obj) {}
+void* osMutexInit() { return SDL_CreateMutex(); }
+void osMutexFree(void *obj) { SDL_DestroyMutex((SDL_mutex *)obj); }
+void osMutexLock(void *obj) { SDL_LockMutex((SDL_mutex *)obj); }
+void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_mutex *)obj); }
 #endif
 
 #define WND_TITLE    			"OpenLara"

@@ -295,25 +295,29 @@ enum StringID {
 
 #define STR_SCALE "25", "50", "75", "100"
 
-const char *helpText = 
-    "Start - add second player or restore Lara@"
-    "H - Show or hide this help@"
-    "ALT and ENTER - Fullscreen@"
-    "5 - Save Game@"
-    "9 - Load Game@"
-    "C - Look@"
-    "R - Slow motion@"
-    "T - Fast motion@"
-    "Roll - Up & Down@"
-    "Step Left - Walk & Left@"
-    "Step Right - Walk & Right@"
-    "Out of water - Up & Action@"
-    "Handstand - Up & Walk@"
-    "Swan dive - Up & Walk & Jump@"
-    "First Person View - Look & Action@"
-    "DOZY on - Look & Duck & Action & Jump@"
-    "DOZY off - Walk@"
-    "Free Camera - hold L & R stick";
+const char* helpText =
+"Start - add second player or restore Lara@"
+"H - Show or hide this help@"
+"ALT and ENTER - Fullscreen@"
+"5 - Save Game@"
+"9 - Load Game@"
+"C - Look@"
+"R - Slow motion@"
+"T - Fast motion@"
+"Roll - Up & Down@"
+"Step Left - Walk & Left@"
+"Step Right - Walk & Right@"
+"Out of water - Up & Action@"
+"Handstand - Up & Walk@"
+"Swan dive - Up & Walk & Jump@"
+"First Person View - Look & Action@"
+"DOZY on - Look & Duck & Action & Jump@"
+"DOZY off - Walk@"
+"Free Camera - hold L & R stick@"
+"@"
+#ifdef __MORPHOS__
+"Enhanced MorphOS SDL3 version by BeWorld/BSzili - 2025";
+#endif
 
 #include "lang/en.h"
 #include "lang/fr.h"
