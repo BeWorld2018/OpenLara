@@ -70,7 +70,7 @@ struct OptionItem {
         uint8 alpha = 255;
         StringID vStr = StringID(color + int(value));
         int maxWidth = 0;
-        char buffer[16];
+        char buffer[64];
         if (oStr == STR_OPT_RESOLUTION) {
             sprintf(buffer, "%dx%d", Core::screenModes[value].width, Core::screenModes[value].height);
         } else {
@@ -80,7 +80,7 @@ struct OptionItem {
                 t = 0.2f + (sinf(t * PI * 2) * 0.5f + 0.5f) * 0.8f;
                 alpha = uint8(t * 255.0f);
             }
-            strcpy(buffer, STR[vStr]);
+            strncpy(buffer, STR[vStr], sizeof(buffer));
         }
 
         UI::textOut(vec2(x, y), buffer, UI::aCenter, w, alpha, UI::SHADE_GRAY); // color as StringID
