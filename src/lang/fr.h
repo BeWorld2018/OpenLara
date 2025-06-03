@@ -78,7 +78,7 @@ const char *STR_FR[] = { ""
     , "Scale"
     , "St)er)eo"
     , "Objets Simples"
-    , "Resolution"
+    , "R)esolution"
     , STR_SCALE
 // sound options
     , "R)egler Volume"

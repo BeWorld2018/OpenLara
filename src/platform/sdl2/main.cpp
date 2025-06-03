@@ -28,7 +28,7 @@ void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_mutex *)obj); }
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: " WND_TITLE " 1.0 (" __AMIGADATE__ ")";
+const char *version_tag = "$VER: " WND_TITLE " 1.1 (" __AMIGADATE__ ")";
 #endif
 
 static void screenshot(const char *fileName) {
