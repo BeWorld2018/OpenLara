@@ -155,8 +155,8 @@ static const OptionItem optDetail[] = {
     OptionItem(),
 #if defined(__SDL3__) || defined(__SDL2__) || defined(_OS_WIN)
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_MODE,            SETTINGS(detail.displaymode), STR_DISPLAYMODE_WINDOWED, 0, 1),
-#if defined(__SDL3__) || defined(__SDL2__) // TODO :: || defined(_OS_WIN)
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, 7),
+#if defined(__SDL3__) || defined(__SDL2__) || defined(_OS_WIN)
+    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, COUNT(Core::screenModes)-1),
 #endif
 #endif
 #ifdef INV_QUALITY
