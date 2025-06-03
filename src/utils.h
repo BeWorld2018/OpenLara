@@ -181,6 +181,16 @@ inline uint16 swap16(uint16 x) {
 inline uint32 swap32(uint32 x) {
     return ((x & 0x000000FF) << 24) | ((x & 0x0000FF00) << 8) | ((x & 0x00FF0000) >> 8) | ((x & 0xFF000000) >> 24);
 }
+inline uint64 swap64(uint64 x) {
+    return ((x & 0x00000000000000FFULL) << 56) |
+        ((x & 0x000000000000FF00ULL) << 40) |
+        ((x & 0x0000000000FF0000ULL) << 24) |
+        ((x & 0x00000000FF000000ULL) << 8) |
+        ((x & 0x000000FF00000000ULL) >> 8) |
+        ((x & 0x0000FF0000000000ULL) >> 24) |
+        ((x & 0x00FF000000000000ULL) >> 40) |
+        ((x & 0xFF00000000000000ULL) >> 56);
+}
 
 float clampAngle(float a) {
     return a < -PI ? a + PI2 : (a >= PI ? a - PI2 : a);
@@ -2367,7 +2377,11 @@ public:
 
     inline uint64 read64() {
         uint64 x;
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        return swap64(read(x));
+#else
         return read(x);
+#endif
     }
 };
 

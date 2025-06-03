@@ -3374,7 +3374,7 @@ namespace TR {
         #endif
 
         #if defined(__MORPHOS__) || defined(__amigaos4__) // ONLY TR1 for now
-        	if ( ((version & VER_TR1_PC) != VER_TR1_PC) && ((version & VER_TR1_PSX) != VER_TR1_PSX)) {
+        	if ( ((version & VER_TR1) != VER_TR1)) {
                 version = VER_UNKNOWN;
                 return;
             
@@ -6846,7 +6846,11 @@ namespace TR {
                             if (t->attribute == 1 && idx == 0)
                                 dst->color[y * 256 + x].value = 0;
                             else
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+                                dst->color[y * 256 + x] = ColorCLUT(c.value);
+#else
                                 dst->color[y * 256 + x] = ColorCLUT(swap16(c.value));
+#endif
                         }
 
                     break;

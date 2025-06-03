@@ -714,14 +714,27 @@ struct Texture : GAPI::Texture {
         uint8 *data = new uint8[stream.size];
         stream.raw(data, stream.size);
 
-        uint32 *data32 = new uint32[width * height];
-        uint32 *dst = data32;
-        uint16 *src = (uint16*)data;
-        uint16 *end = src + width * height;
-
-        while (src < end) {
-            uint16 c = swap16(*src++);
-            *dst++ = ((c & 0x001F) << 3) | ((c & 0x03E0) << 6) | (((c & 0x7C00) << 9)) | 0xFF000000;
+        Color32* data32 = new Color32[width * height];
+        {
+            Color32* dst = data32;
+            uint16* src = (uint16*)data;
+            uint16* end = src + width * height;
+            while (src < end) {
+                Color16 c(*src++);
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+                c.value = swap16(c.value);
+                dst->r = c.b() << 3;
+                dst->g = c.g() << 3;
+                dst->b = c.r() << 3;
+                dst->a = 255;
+#else
+                dst->r = c.b() << 3;
+                dst->g = c.g() << 3;
+                dst->b = c.r() << 3;
+                dst->a = 255;
+#endif
+                dst++;
+            }
         }
 
         delete[] data;

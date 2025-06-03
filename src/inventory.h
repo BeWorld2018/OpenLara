@@ -1925,8 +1925,6 @@ struct Inventory {
 		for (int i = 0; i < 4; i++) {
             vertices[i].color = ubyte4(255, 255, 255, 255);
         }
-       
-       // backTex->dump("background.bmp");
 #endif
         backTex->bind(sDiffuse);
 

@@ -1809,7 +1809,7 @@ namespace GAPI {
             glFogfv(GL_FOG_COLOR, fogColor);
             glFogi(GL_FOG_MODE, GL_LINEAR);
             glFogf(GL_FOG_START, 24.0f);
-            glFogf(GL_FOG_END, 32.0f * 1024.0f);
+            glFogf(GL_FOG_END, 32768.0f);
         }
         else {
             glDisable(GL_FOG);
