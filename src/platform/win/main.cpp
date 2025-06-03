@@ -644,6 +644,11 @@ int checkLanguage() {
     return str - STR_LANG_EN;
 }
 
+void osWindowResize(int w, int h) {
+    // TODO
+
+}
+
 void osToggleFullscreen(bool enable) {
     static WINDOWPLACEMENT pLast;
     DWORD style = GetWindowLong(hWnd, GWL_STYLE);
