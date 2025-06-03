@@ -11,6 +11,10 @@
 #include <SDL3/SDL_main.h>
 #include "game.h"
 
+#if defined(_GAPI_SW)
+#not supported with SDL3
+#endif
+
 #define WND_TITLE    			"OpenLara"
 #define SDL_WINDOW_WIDTH        640
 #define SDL_WINDOW_HEIGHT       480
@@ -36,6 +40,7 @@ const char *version_tag = "$VER: " WND_TITLE " 1.1 (" __AMIGADATE__ ")";
 bool fullscreen = false;
 int passfull = 0;
 bool withaudio = true;
+int joyIndex;
 
 struct AudioContext {
     SDL_AudioStream *stream;
@@ -46,11 +51,7 @@ AudioContext audioCtx;
 
 typedef struct {
     SDL_Window *window;
-#if defined(_GAPI_SW)    
-    SDL_Surface *surface;
-#else
     SDL_GLContext context;
-#endif
 } AppState;
 
 AppState *as;
@@ -555,21 +556,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 	Core::width  = w;
 	Core::height = h;
 
-	
-#if defined(_GAPI_SW)
-    as->surface = SDL_GetWindowSurface(as->window);
-    if (as->surface == NULL) {
-        LOG("Couldn't get surface: %s", SDL_GetError());   
-		return SDL_APP_FAILURE;
-    }
-    SDL_LockSurface(as->surface);
-
-    GAPI::swColor = (unsigned int*)as->surface->pixels;
-    GAPI::resize();
-#else
 	as->context = SDL_GL_CreateContext(as->window);	
-#endif
-
 	SDL_HideCursor();
 
     if (!sndInit()) {
@@ -583,8 +570,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_CONTINUE;
     
 }
-
-int joyIndex;
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
@@ -695,13 +680,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     
     if (appstate != NULL) {
         as = (AppState *)appstate;
-        
-#if defined(_GAPI_SW)
-		SDL_DestroySurface(as->surface);
-#else
-		SDL_GL_DestroyContext(as->context);
-#endif
-
+        SDL_GL_DestroyContext(as->context);
 		SDL_DestroyWindow(as->window);
 
         SDL_free(as);
@@ -719,11 +698,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 	if (Game::update()) {
             Game::render();
 			Core::waitVBlank();
-#if defined(_GAPI_SW)
-            SDL_UpdateWindowSurface(as->window);
-#else
             SDL_GL_SwapWindow(as->window);
-#endif
         }
 
 	return SDL_APP_CONTINUE;
