@@ -396,10 +396,7 @@ struct Level : IGame {
 
         bool toggleVR = (settings.detail.stereo == Core::Settings::STEREO_VR) ^ (Core::settings.detail.stereo == Core::Settings::STEREO_VR);
 
-        Core::setChangeMode();
         Core::setChangeDisplayMode();
-
-       
         Core::setVSync(Core::settings.detail.vsync != 0);
 
         if (toggleVR) {

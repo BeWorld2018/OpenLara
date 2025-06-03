@@ -186,11 +186,15 @@ void osWindowResize(int w, int h) {
 	
 }
 
-#ifndef _GAPI_GLES 
-void osToggleFullscreen(bool enable) {
 
+#ifndef _GAPI_GLES 
+void osToggleFullscreen(bool enable, int w, int h) {
+
+
+	SDL_SetWindowSize(sdl_window, w, h);
+	SDL_SetWindowPosition(sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	
     Uint32 flags = 0;
-	int w, h;
     
 	fullscreen = enable;
 
@@ -440,8 +444,10 @@ void inputUpdate() {
                 if (scancode == SDL_SCANCODE_RETURN) {
                     if (isKeyPressed(SDL_SCANCODE_RALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
                     	fullscreen = !fullscreen;
-                        osToggleFullscreen(fullscreen);
-                        Core::settings.detail.displaymode = fullscreen ? 1 : 0;
+                       	osToggleFullscreen(!fullscreen, Core::width, Core::height);			
+						// Settings ?!
+						Core::settings.detail.displaymode = fullscreen ? 1 : 0;
+						inventory->game->applySettings(Core::settings);
                     }
                 }
 				if (scancode == SDL_SCANCODE_F1) {

@@ -295,8 +295,7 @@ extern bool  osJoyReady      (int index);
 extern void  osJoyVibrate    (int index, float L, float R);
 
 #if defined(__SDL2__) || defined(__SDL3__) || defined(_OS_WIN)
-extern void  osToggleFullscreen(bool enable);
-extern void  osWindowResize(int w, int h);
+extern void  osToggleFullscreen(bool fullscreen, int w, int h);
 #endif
 
 struct ScreenMode {
@@ -1182,15 +1181,9 @@ namespace Core {
 
     void setChangeDisplayMode() {
 #if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
-        osToggleFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN);
-#endif
-    }
-
-    void setChangeMode() {
-#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
         int w = Core::screenModes[Core::settings.detail.screenmode].width;
         int h = Core::screenModes[Core::settings.detail.screenmode].height;
-        osWindowResize(w, h);
+        osToggleFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN, w, h);
 #endif
     }
 

@@ -99,30 +99,32 @@ static void screenshot(const char *fileName) {
     }
 }*/
 
-void osWindowResize(int w, int h) {
-    
-	SDL_SetWindowSize(as->window, w, h);
-	SDL_SetWindowPosition(as->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-	passfull = 1;
-    Core::width = w;
-    Core::height = h;
+void osToggleFullscreen(bool enable, int Ww, int Wh) {
 	
-}
-
-
-void osToggleFullscreen(bool enable) {
-    int w, h;
-	fullscreen = enable;
-    if (enable) {
+	int w = 0, h = 0;
+	SDL_WindowFlags flags = SDL_GetWindowFlags(as->window);
+	
+	fullscreen = false;
+	if (enable) {
+		// on demande fullscreen	
+		if ((flags & SDL_WINDOW_FULLSCREEN) == 1) {
+			// on 
+			fullscreen = true;
+			// always in fullscreen -> check resolution
+			const SDL_DisplayMode* mymode = SDL_GetWindowFullscreenMode(as->window);
+			if (mymode->w == Ww && mymode->h == Wh) {
+				// same resolution... do nothing
+				SDL_Log("Same resolution %d %d detected", mymode->w, mymode->h);
+				return;
+			}
+		}
+		SDL_Log("got ot fullscreen...");
         SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
-
-        int windowW, windowH;
-        SDL_GetWindowSize(as->window, &windowW, &windowH);
-
         int num_modes = 0;
         SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
 
         if (modes && num_modes > 0) {
+			SDL_Log("got ot fullscreen...");
             SDL_DisplayMode* bestMode = nullptr;
             int bestDiff = INT_MAX;
 
@@ -131,8 +133,7 @@ void osToggleFullscreen(bool enable) {
 
                 int dw = mode->w;
                 int dh = mode->h;
-
-                int diff = std::abs(dw - windowW) + std::abs(dh - windowH);
+                int diff = std::abs(dw - Ww) + std::abs(dh - Wh);
                 if (diff < bestDiff) {
                     bestDiff = diff;
                     bestMode = mode;
@@ -140,25 +141,38 @@ void osToggleFullscreen(bool enable) {
             }
 
             if (bestMode) {
-                w = bestMode->w;
-                h = bestMode->h;
+                Ww = bestMode->w;
+                Wh = bestMode->h;
+				SDL_Log("got ot fullscreen... %d x %d", Ww, Wh);
                 SDL_SetWindowFullscreenMode(as->window, bestMode);
-                SDL_SetWindowFullscreen (as->window, fullscreen);
-			    
-            } else {
-                fullscreen = false;
+                SDL_SetWindowFullscreen(as->window, true);
+				fullscreen = true;
             }
-        } else {
-            fullscreen = false;
         }
     } else {
-        SDL_SetWindowFullscreenMode(as->window, NULL);
-        SDL_SetWindowFullscreen (as->window, fullscreen);
-    	SDL_GetWindowSize(as->window, &w, &h);
-    }
+		// mode windowed
+		if ((flags & SDL_WINDOW_FULLSCREEN) == 1) {
+			SDL_Log("on etait en fullscreen, on passe en mode fenetre %d %d", Ww, Wh);
+			SDL_SetWindowFullscreenMode(as->window, NULL);
+			SDL_SetWindowFullscreen(as->window, false);
+			SDL_SetWindowSize(as->window, Ww, Wh);
+			SDL_SetWindowPosition(as->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+		}else {
+			
+			int windowW, windowH;
+			SDL_GetWindowSize(as->window, &windowW, &windowH);
+			SDL_Log("on est en mode fenetre, on resize - actual:%d %d - ask %d %d - Core:: %d %d", windowW, windowH, Ww, Wh, Core::width, Core::height);
+			if (Ww != windowW || Wh != windowH) {	
+				SDL_SetWindowSize(as->window, Ww, Wh);
+				SDL_SetWindowPosition(as->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+			}
+		}
+	}
+
     passfull = 1;
-    Core::width = w;
-    Core::height = h;
+    Core::width = Ww;
+    Core::height = Wh;
+
 }
 
 // GamePad
@@ -169,7 +183,7 @@ SDL_Gamepad *sdl_gamepads[MAX_JOYS];
 vec2 joyL, joyR;
 
 bool osJoyReady(int index) {
-    return index == 0; // TODO
+    return index == 0;
 }
 void osJoyVibrate(int index, float L, float R) {
 	
@@ -580,7 +594,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     	case SDL_EVENT_WINDOW_RESIZED: {
 		    int w = event->window.data1;
 			int h = event->window.data2;
-			if (passfull == 0) {
+			if (passfull == 0 && !fullscreen) {
 			    Core::width  = w;
 				Core::height = h;
 			} else {
@@ -596,12 +610,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			int scancode = event->key.scancode;
 			key = codeToInputKey(scancode);
 			
-			if (event->key.mod & SDL_KMOD_ALT && scancode == SDL_SCANCODE_RETURN) {
-				fullscreen = !fullscreen;
-
-	            osToggleFullscreen(fullscreen);
+			if ((event->key.mod & SDL_KMOD_ALT) && scancode == SDL_SCANCODE_RETURN) {
+	            osToggleFullscreen(!fullscreen, Core::width, Core::height);			
 				// Settings ?!
+				SDL_Log("on sauvegarde ! %d", fullscreen);
 				Core::settings.detail.displaymode = fullscreen ? 1 : 0;
+				inventory->game->applySettings(Core::settings);
 	            break;
 			}
 			
