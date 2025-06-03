@@ -1178,16 +1178,21 @@ namespace Core {
     }
 
     void setChangeDisplayMode() {
-        GAPI::setFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN);
+#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
+        osToggleFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN);
+#endif
     }
 
     void setChangeMode() {
-        GAPI::setWindowSize(Core::settings.detail.screenmode);
+#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
+        int w = Core::screenModes[Core::settings.detail.screenmode].width;
+        int h = Core::screenModes[Core::settings.detail.screenmode].height;
+        osWindowResize(w, h);
+#endif
     }
 
     void setFog(bool enable) {
         Core::settings.detail.fog = enable;
-        GAPI::withFOG = enable;
     }
 
     void waitVBlank() {
@@ -1379,10 +1384,18 @@ namespace Core {
 
     void setFog(const vec4 &params) {
     #if defined(_GAPI_D3D8) || defined(_GAPI_C3D) || defined(_GAPI_SW) || defined(FFP)
-        GAPI::setFog(params);
+        if (!Core::settings.detail.fog) {
+            GAPI::setFog(FOG_NONE);
+        } else {
+            GAPI::setFog(params);
+        }
     #else
         ASSERT(Core::active.shader);
-        Core::active.shader->setParam(uFogParams, params);
+        if (!Core::settings.detail.fog) {
+            Core::active.shader->setParam(uFogParams, FOG_NONE);
+        } else {
+            Core::active.shader->setParam(uFogParams, params);
+        }
     #endif
     }
 

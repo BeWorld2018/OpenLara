@@ -532,7 +532,6 @@ namespace GAPI {
     char GLSL_HEADER_FRAG[512];
 
     bool GL_VER_3 = false;
-    bool withFOG = true;
 
 // Shader
     #ifndef FFP
@@ -1695,21 +1694,6 @@ namespace GAPI {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void setFullscreen(bool enable) { 
-#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
-        osToggleFullscreen(enable);
-#endif
-    }
-
-    void setWindowSize(int resolution) {
-#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
-        int w, h;
-        w = Core::screenModes[Core::settings.detail.screenmode].width;
-        h = Core::screenModes[Core::settings.detail.screenmode].height;
-        osWindowResize(w, h);
-#endif
-    }
-
     void setVSync(bool enable) {
         #ifdef _OS_WIN
             if (wglSwapIntervalEXT) wglSwapIntervalEXT(enable ? 1 : 0);
@@ -1814,7 +1798,7 @@ namespace GAPI {
 
     void setFog(const vec4 &params) {
 #ifdef FFP
-        if (params.w > 0.0f && withFOG) {
+        if (params.w > 0.0f) {
             glEnable(GL_FOG);
             GLfloat fogColor[4] = {
                 clamp(params.x, 0.0f, 1.0f),
