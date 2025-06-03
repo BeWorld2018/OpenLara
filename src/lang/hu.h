@@ -41,7 +41,7 @@ const char *STR_HU[] = { ""
     , "%s - Kiv)alaszt"
     , "%s - Vissza"
     , "Ablak"
-    , "Teljes képerny\"o"
+    , "Teljes k)eperny\"o"
 // inventory pages
     , "OPCI)OK"
     , "T)ARGYLISTA"
