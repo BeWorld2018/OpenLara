@@ -18,8 +18,8 @@ void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_mutex *)obj); }
 #endif
 
 #define WND_TITLE    			"OpenLara"
-#define SDL_WINDOW_WIDTH        800
-#define SDL_WINDOW_HEIGHT       600
+#define SDL_WINDOW_WIDTH        640
+#define SDL_WINDOW_HEIGHT       480
 #define SND_FRAME_SIZE  		4
 #define SND_FRAMES      		1024
 #define SND_FREQ				44100
@@ -178,18 +178,8 @@ void resize_texture(int w, int h)
 
 }
 
-void osWindowResize(int w, int h) {
-    
-	SDL_SetWindowSize(sdl_window, w, h);
-	SDL_SetWindowPosition(sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-	resize_texture(w, h);
-	
-}
-
-
 #ifndef _GAPI_GLES 
 void osToggleFullscreen(bool enable, int w, int h) {
-
 
 	SDL_SetWindowSize(sdl_window, w, h);
 	SDL_SetWindowPosition(sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -441,14 +431,13 @@ void inputUpdate() {
                 }
 
 #ifndef _GAPI_GLES 
-                if (scancode == SDL_SCANCODE_RETURN) {
-                    if (isKeyPressed(SDL_SCANCODE_RALT) && isKeyPressed(SDL_SCANCODE_RETURN)) {
-                    	fullscreen = !fullscreen;
-                       	osToggleFullscreen(!fullscreen, Core::width, Core::height);			
-						// Settings ?!
-						Core::settings.detail.displaymode = fullscreen ? 1 : 0;
-						inventory->game->applySettings(Core::settings);
-                    }
+               	if ((event.key.keysym.mod & KMOD_ALT) && scancode == SDL_SCANCODE_RETURN) {
+                	fullscreen = !fullscreen;
+                   	osToggleFullscreen(fullscreen, Core::width, Core::height);			
+					// Settings ?!
+					Core::settings.detail.displaymode = fullscreen ? 1 : 0;
+					inventory->game->applySettings(Core::settings);
+					break;
                 }
 				if (scancode == SDL_SCANCODE_F1) {
                     screenshot("screenshot");
