@@ -106,25 +106,20 @@ void osToggleFullscreen(bool enable, int Ww, int Wh) {
 	
 	fullscreen = false;
 	if (enable) {
-		// on demande fullscreen	
+
 		if ((flags & SDL_WINDOW_FULLSCREEN) == 1) {
-			// on 
 			fullscreen = true;
-			// always in fullscreen -> check resolution
 			const SDL_DisplayMode* mymode = SDL_GetWindowFullscreenMode(as->window);
 			if (mymode->w == Ww && mymode->h == Wh) {
 				// same resolution... do nothing
-				SDL_Log("Same resolution %d %d detected", mymode->w, mymode->h);
 				return;
 			}
 		}
-		SDL_Log("got ot fullscreen...");
         SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
         int num_modes = 0;
         SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
 
         if (modes && num_modes > 0) {
-			SDL_Log("got ot fullscreen...");
             SDL_DisplayMode* bestMode = nullptr;
             int bestDiff = INT_MAX;
 
@@ -143,7 +138,6 @@ void osToggleFullscreen(bool enable, int Ww, int Wh) {
             if (bestMode) {
                 Ww = bestMode->w;
                 Wh = bestMode->h;
-				SDL_Log("got ot fullscreen... %d x %d", Ww, Wh);
                 SDL_SetWindowFullscreenMode(as->window, bestMode);
                 SDL_SetWindowFullscreen(as->window, true);
 				fullscreen = true;
@@ -152,7 +146,6 @@ void osToggleFullscreen(bool enable, int Ww, int Wh) {
     } else {
 		// mode windowed
 		if ((flags & SDL_WINDOW_FULLSCREEN) == 1) {
-			SDL_Log("on etait en fullscreen, on passe en mode fenetre %d %d", Ww, Wh);
 			SDL_SetWindowFullscreenMode(as->window, NULL);
 			SDL_SetWindowFullscreen(as->window, false);
 			SDL_SetWindowSize(as->window, Ww, Wh);
@@ -161,7 +154,6 @@ void osToggleFullscreen(bool enable, int Ww, int Wh) {
 			
 			int windowW, windowH;
 			SDL_GetWindowSize(as->window, &windowW, &windowH);
-			SDL_Log("on est en mode fenetre, on resize - actual:%d %d - ask %d %d - Core:: %d %d", windowW, windowH, Ww, Wh, Core::width, Core::height);
 			if (Ww != windowW || Wh != windowH) {	
 				SDL_SetWindowSize(as->window, Ww, Wh);
 				SDL_SetWindowPosition(as->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -613,7 +605,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 			if ((event->key.mod & SDL_KMOD_ALT) && scancode == SDL_SCANCODE_RETURN) {
 	            osToggleFullscreen(!fullscreen, Core::width, Core::height);			
 				// Settings ?!
-				SDL_Log("on sauvegarde ! %d", fullscreen);
 				Core::settings.detail.displaymode = fullscreen ? 1 : 0;
 				inventory->game->applySettings(Core::settings);
 	            break;

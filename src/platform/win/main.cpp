@@ -705,7 +705,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             if (msg == WM_SYSKEYDOWN && wParam == VK_RETURN) { // Alt + Enter - switch to fullscreen or window
                 DWORD style = GetWindowLong(hWnd, GWL_STYLE);
                 bool enable = (style & WS_OVERLAPPEDWINDOW);
-                osToggleFullscreen(enable);
+                osToggleFullscreen(enable, Core::width, Core::height);
                 // Settings ?!
                 Core::settings.detail.displaymode = enable ? 1 : 0;
                 break;
