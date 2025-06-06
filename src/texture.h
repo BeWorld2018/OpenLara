@@ -271,8 +271,16 @@ struct Texture : GAPI::Texture {
             uint16 rect[4];
             uint16 width;
             uint16 height;
-            uint8  other[48 + 64];
+            uint8  palette[48];
+            uint8  reserved;
+            uint8  colorplanes;
+            uint16 bytesperrow;
+            uint16 paletteinfo;
+            uint16 horscrsize;
+            uint16 verscrsize;
+            uint8  other[54];
         } pcx;
+        ASSERT(sizeof(pcx) == 128);
 
         pcx.magic = stream.read();
         pcx.version = stream.read();
@@ -284,10 +292,19 @@ struct Texture : GAPI::Texture {
         pcx.rect[3] = stream.readLE16();
         pcx.width = stream.readLE16();
         pcx.height = stream.readLE16();
+        stream.read(pcx.palette);
+        pcx.reserved = stream.read();
+        pcx.colorplanes = stream.read();
+        pcx.bytesperrow = stream.readLE16();
+        pcx.paletteinfo = stream.readLE16();
+        pcx.horscrsize = stream.readLE16();
+        pcx.verscrsize = stream.readLE16();
         stream.seek(sizeof(pcx.other));
 
         ASSERT(pcx.bpp == 8);
         ASSERT(pcx.compression == 1);
+        pcx.width = pcx.bytesperrow;
+        ASSERT(pcx.width == pcx.bytesperrow);
 
         int i = 0;
         int size = pcx.width * pcx.height;
