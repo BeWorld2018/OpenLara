@@ -80,24 +80,6 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
-/*void osListScreenMode() {
-    SDL_DisplayID displayID = SDL_GetPrimaryDisplay(); 
-    int nbModes = 0;
-	Core::screenModesCount = 0;
-    SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(displayID, &nbModes);
-
-	for (int i = 0; i < nbModes; ++i) {
-        SDL_DisplayMode *mode = modes[i];
-
-        // Optionnel : filtrer les doublons ou petites résolutions
-        if (mode->w >= 640 && mode->h >= 480) {
-            Core::screenModes[Core::screenModesCount++] = { mode->w, mode->h };
-
-            SDL_Log("Mode %d : %dx%d @%.0fHz (density=%.2f)",
-                i, mode->w, mode->h, mode->refresh_rate, mode->pixel_density);
-        }
-    }
-}*/
 
 void osToggleFullscreen(bool enable, int Ww, int Wh) {
 	

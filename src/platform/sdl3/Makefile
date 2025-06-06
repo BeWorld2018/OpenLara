@@ -1,6 +1,7 @@
 
 CC = ppc-morphos-gcc-11
 CXX = ppc-morphos-g++-11
+STRIP = ppc-morphos-strip
 
 AMIGADATE = $(shell date +"%-d.%-m.%Y")
 
@@ -24,6 +25,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS_C)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(STRIP) $(TARGET)
 
 clean:
 	rm -f $(OBJS_C) 
