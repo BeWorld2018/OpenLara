@@ -502,6 +502,7 @@ namespace Core {
 
     bool resetState;
     bool isQuit;
+    bool isGoldExpansion; 
 
     int getTime() {
         return osGetTimeMS();

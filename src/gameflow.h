@@ -1005,7 +1005,7 @@ namespace TR {
 
     LevelID getStartId(Version version) {
         switch (version & VER_VERSION) {
-            case VER_TR1 : return LVL_TR1_1;
+            case VER_TR1 : return Core::isGoldExpansion ? LVL_TR1_EGYPT : LVL_TR1_1;
             case VER_TR2 : return LVL_TR2_WALL;
             case VER_TR3 : return LVL_TR3_JUNGLE;
             case VER_TR4 : return LVL_TR4_ANGKOR1;
@@ -1016,7 +1016,7 @@ namespace TR {
 
     LevelID getEndId(Version version) {
         switch (version & VER_VERSION) {
-            case VER_TR1 : return LVL_TR1_10C;
+            case VER_TR1 : return Core::isGoldExpansion ? LVL_TR1_END2 : LVL_TR1_10C;
             case VER_TR2 : return LVL_TR2_HOUSE;
             case VER_TR3 : return LVL_TR3_CHAMBER;
             case VER_TR4 : return LVL_TR4_JOBY5C;
@@ -1045,9 +1045,14 @@ namespace TR {
     }
 
     Version getGameVersion() {
+        Core::isGoldExpansion = false;
         useEasyStart = true;
         if (Stream::existsContent("DATA/GYM.PHD") || Stream::existsContent("GYM.PHD"))
             return VER_TR1_PC;
+        if (Stream::existsContent("DATA/EGYPT.PHD") || Stream::existsContent("EGYPT.PHD")) {
+            Core::isGoldExpansion = true;
+            return VER_TR1_PC;
+        }
         if (Stream::existsContent("PSXDATA/GYM.PSX"))
             return VER_TR1_PSX;
         if (Stream::existsContent("DATA/GYM.SAT"))

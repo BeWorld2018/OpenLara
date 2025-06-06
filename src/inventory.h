@@ -709,7 +709,9 @@ struct Inventory {
         } 
 
         if (level->isTitle()) {
-            add(TR::Entity::INV_HOME);
+            if (!Core::isGoldExpansion) {
+                add(TR::Entity::INV_HOME);
+            }
         } else {
             add(TR::Entity::INV_COMPASS);
             add(TR::Entity::INV_STOPWATCH);
