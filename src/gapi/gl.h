@@ -1829,9 +1829,10 @@ namespace GAPI {
 #ifdef FFP
         bool isMirror = (Core::renderType == 4);
         bool isFlash = (Core::renderType == 1);
+        bool isUI = Core::pass == Core::passGUI;
         float ambient = isMirror ? 1.0f : Core::active.material.y;
         mat4 mModelInv = mModel.inverseOrtho();
-        bool waterEnabled = (Core::params.y < 1000000.0f && Core::params.y > 0.0f);
+        bool waterEnabled = !isFlash && !isUI && (Core::params.y < 1000000.0f && Core::params.y > 0.0f);
         vec3 lightsRelPos[MAX_LIGHTS];
         if (!isFlash) {
             for (int j = 0; j < MAX_LIGHTS; j++) {
