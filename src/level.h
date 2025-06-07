@@ -3627,7 +3627,11 @@ struct Level : IGame {
         short4 oldViewport = Core::viewportDef;
 
         setDefaultTarget(eye, view, false);
-		Core::setTarget(NULL, NULL, RT_CLEAR_DEPTH | RT_STORE_COLOR);
+    #if defined(_GAPI_GU) || defined(_GAPI_SW) //fixme: psp framebuffer error?
+        Core::setTarget(NULL, NULL, RT_CLEAR_DEPTH | RT_CLEAR_COLOR | RT_STORE_COLOR);
+    #else
+        Core::setTarget(NULL, NULL, RT_CLEAR_DEPTH | RT_STORE_COLOR);
+    #endif
 
         float aspect = setViewport(view, eye);
 

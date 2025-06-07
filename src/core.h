@@ -1179,7 +1179,7 @@ namespace Core {
     }
 
     void setChangeDisplayMode() {
-#if defined(_OS_WIN) ||  defined(__SDL3__) || defined(__SDL2__)
+#if defined(__SDL3__) || defined(__SDL2__)
         int w = Core::screenModes[Core::settings.detail.screenmode].width;
         int h = Core::screenModes[Core::settings.detail.screenmode].height;
         osToggleFullscreen(Core::settings.detail.displaymode == Settings::DisplayMode::DM_FULLSCREEN, w, h);
