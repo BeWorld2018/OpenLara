@@ -303,9 +303,10 @@ struct ScreenMode {
     int height;
 };
 
-#ifdef __SDL3__
-extern int osListScreenMode();
+#if defined(__SDL2__) || defined(__SDL3__) 
+extern int osListScreenMode(ScreenMode* screenModes);
 #endif
+
 #define OS_LOCK(mutex) Core::Lock _lock(mutex)
 
 enum InputKey { ikNone,
@@ -403,24 +404,10 @@ namespace Core {
 
 #define SETTINGS_VERSION 8
 #define SETTINGS_READING 0xFF
-#ifdef __SDL3__
-#define MAX_SCREEN_MODES 64
+#if defined(__SDL3__) || defined(__SDL2__)
+    #define MAX_SCREEN_MODES 64
     int CountScreenMode = 0;
     ScreenMode screenModes[MAX_SCREEN_MODES];
-#else
-    ScreenMode screenModes[] = {
-       {640, 480},
-        {800, 600},
-        {1024, 768},
-        {1152, 864},
-        {1280, 720},
-        {1280, 1024},
-        {1400, 1050},
-        {1440, 900},
-        {1680, 1050},
-        {1920, 1080},
-        {1920, 1200},
-    };
 #endif
     struct Settings {
         enum Quality  { LOW, MEDIUM, HIGH };
@@ -1161,9 +1148,9 @@ namespace Core {
         settings.detail.setWater(Core::Settings::LOW);
     #endif
 
-     #ifdef __SDL3__
-        CountScreenMode = osListScreenMode();
-     #endif
+    #if defined(__SDL3__) || defined(__SDL2__)
+        CountScreenMode = osListScreenMode(Core::screenModes);
+    #endif
 
         memset(&active, 0, sizeof(active));
         renderState = 0;

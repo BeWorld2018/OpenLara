@@ -80,14 +80,13 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
-int osListScreenMode() {
+int osListScreenMode(ScreenMode *screenModes) {
 	
 	int num_displays = 0;
     SDL_DisplayID* displays = SDL_GetDisplays(&num_displays);
     if (!displays || num_displays < 1) {
         SDL_Log("No displays found.");
-        SDL_Quit();
-        return -1;
+        return 0;
     }
 	
 	SDL_DisplayID displayID = displays[0];
@@ -95,40 +94,41 @@ int osListScreenMode() {
     SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
 
     if (!modes || num_modes < 1) {
+		SDL_Log("No display modes found.");
         SDL_free(displays);
-        return -1;
+        return 0;
     }
 
     int screenModeCount = 0;
     for (int i = 0; i < num_modes; ++i) {
         SDL_DisplayMode* mode = modes[i];
 
-        // Éviter les doublons
         int duplicate = 0;
         for (int j = 0; j < screenModeCount; ++j) {
-            if (Core::screenModes[j].width == mode->w && Core::screenModes[j].height == mode->h) {
+            if (screenModes[j].width == mode->w && screenModes[j].height == mode->h) {
                 duplicate = 1;
                 break;
             }
         }
 
         if (!duplicate) {
-            Core::screenModes[screenModeCount].width = mode->w;
-            Core::screenModes[screenModeCount].height = mode->h;
+            screenModes[screenModeCount].width = mode->w;
+            screenModes[screenModeCount].height = mode->h;
             screenModeCount++;
+			if (screenModeCount == MAX_SCREEN_MODES) break;
         }
     }
 	
 	for (int i = 1; i < screenModeCount; i++) {
-        ScreenMode key = Core::screenModes[i];
+        ScreenMode key = screenModes[i];
         int j = i - 1;
 
-        while (j >= 0 && ( Core::screenModes[j].width > key.width ||
-             (Core::screenModes[j].width == key.width && Core::screenModes[j].height > key.height))) {
-            Core::screenModes[j + 1] = Core::screenModes[j];
+        while (j >= 0 && (screenModes[j].width > key.width ||
+             (screenModes[j].width == key.width && screenModes[j].height > key.height))) {
+            screenModes[j + 1] = screenModes[j];
             j--;
         }
-        Core::screenModes[j + 1] = key;
+        screenModes[j + 1] = key;
     }
 	
 	SDL_free(modes);

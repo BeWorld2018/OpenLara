@@ -178,6 +178,23 @@ void resize_texture(int w, int h)
 
 }
 
+int osListScreenMode(ScreenMode *screenModes) {
+	
+	screenModes[0]  = (ScreenMode){640,  480};
+    screenModes[1]  = (ScreenMode){800,  600};
+    screenModes[2]  = (ScreenMode){1024, 768};
+    screenModes[3]  = (ScreenMode){1152, 864};
+    screenModes[4]  = (ScreenMode){1280, 720};
+    screenModes[5]  = (ScreenMode){1280, 1024};
+    screenModes[6]  = (ScreenMode){1400, 1050};
+    screenModes[7]  = (ScreenMode){1440, 900};
+    screenModes[8]  = (ScreenMode){1680, 1050};
+    screenModes[9]  = (ScreenMode){1920, 1080};
+    screenModes[10] = (ScreenMode){1920, 1200};
+	
+	return 11;
+}
+
 #ifndef _GAPI_GLES 
 void osToggleFullscreen(bool enable, int w, int h) {
 
