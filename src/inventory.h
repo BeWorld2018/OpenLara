@@ -38,7 +38,11 @@ struct OptionItem {
     int32    offset;
     uint32   color;
     uint32   icon;
-    uint8    maxValue;
+#ifdef __SDL3__
+    mutable  uint8    maxValue;
+#else
+	uint8    maxValue;
+#endif
     bool     bar;
 
     OptionItem(Type type = TYPE_EMPTY, int title = STR_EMPTY, int32 offset = 0, uint32 color = 0xFFFFFFFF, int icon = 0, uint8 maxValue = 0, bool bar = false) : type(type), title(StringID(title)), offset(offset), color(color), icon(icon), maxValue(maxValue), bar(bar) {}
@@ -89,6 +93,11 @@ struct OptionItem {
         if (type == TYPE_PARAM && active) {
             maxWidth = maxWidth / 2 + 8;
             x += w * 0.5f;
+#ifdef __SDL3__
+            if (maxValue == 0xFF && oStr == STR_OPT_RESOLUTION) {
+                maxValue = Core::CountScreenMode-1;
+            }
+#endif
             if (maxValue != 0xFF) {
                 if (checkValue(value - 1)) UI::specOut(vec2(x - maxWidth - 16.0f, y), 108);
                 if (checkValue(value + 1)) UI::specOut(vec2(x + maxWidth, y), 109);
@@ -157,8 +166,10 @@ static const OptionItem optDetail[] = {
     OptionItem(),
 #if defined(__SDL3__) || defined(__SDL2__) || defined(_OS_WIN)
     OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_MODE,            SETTINGS(detail.displaymode), STR_DISPLAYMODE_WINDOWED, 0, 1),
-#if defined(__SDL3__) || defined(__SDL2__) || defined(_OS_WIN)
-    OptionItem( OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, COUNT(Core::screenModes)-1),
+#ifdef __SDL2__
+    OptionItem(OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, COUNT(Core::screenModes) - 1),
+#elif __SDL3__
+    OptionItem(OptionItem::TYPE_PARAM,  STR_OPT_RESOLUTION,      SETTINGS(detail.screenmode), STR_OPT_RESOLUTION, 0, -1),
 #endif
 #endif
 #ifdef INV_QUALITY

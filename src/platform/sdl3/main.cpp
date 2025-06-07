@@ -34,7 +34,7 @@ void osMutexUnlock(void *obj) { SDL_UnlockMutex((SDL_Mutex *)obj); }
 
 #ifdef __MORPHOS__
 unsigned long _stack = 1024 * 1024 * 2;
-const char *version_tag = "$VER: " WND_TITLE " 1.1 (" __AMIGADATE__ ")";
+const char *version_tag = "$VER: " WND_TITLE " 1.2 (" __AMIGADATE__ ")";
 #endif
 
 bool fullscreen = false;
@@ -80,6 +80,62 @@ static void screenshot(const char *fileName) {
 #endif
 }
 
+int osListScreenMode() {
+	
+	int num_displays = 0;
+    SDL_DisplayID* displays = SDL_GetDisplays(&num_displays);
+    if (!displays || num_displays < 1) {
+        SDL_Log("No displays found.");
+        SDL_Quit();
+        return -1;
+    }
+	
+	SDL_DisplayID displayID = displays[0];
+    int num_modes = 0;
+    SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(displayID, &num_modes);
+
+    if (!modes || num_modes < 1) {
+        SDL_free(displays);
+        return -1;
+    }
+
+    int screenModeCount = 0;
+    for (int i = 0; i < num_modes; ++i) {
+        SDL_DisplayMode* mode = modes[i];
+
+        // Éviter les doublons
+        int duplicate = 0;
+        for (int j = 0; j < screenModeCount; ++j) {
+            if (Core::screenModes[j].width == mode->w && Core::screenModes[j].height == mode->h) {
+                duplicate = 1;
+                break;
+            }
+        }
+
+        if (!duplicate) {
+            Core::screenModes[screenModeCount].width = mode->w;
+            Core::screenModes[screenModeCount].height = mode->h;
+            screenModeCount++;
+        }
+    }
+	
+	for (int i = 1; i < screenModeCount; i++) {
+        ScreenMode key = Core::screenModes[i];
+        int j = i - 1;
+
+        while (j >= 0 && ( Core::screenModes[j].width > key.width ||
+             (Core::screenModes[j].width == key.width && Core::screenModes[j].height > key.height))) {
+            Core::screenModes[j + 1] = Core::screenModes[j];
+            j--;
+        }
+        Core::screenModes[j + 1] = key;
+    }
+	
+	SDL_free(modes);
+    SDL_free(displays);
+	
+	return screenModeCount;
+}
 
 void osToggleFullscreen(bool enable, int Ww, int Wh) {
 	
