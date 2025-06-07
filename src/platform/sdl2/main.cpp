@@ -180,19 +180,48 @@ void resize_texture(int w, int h)
 
 int osListScreenMode(ScreenMode *screenModes) {
 	
-	screenModes[0]  = (ScreenMode){640,  480};
-    screenModes[1]  = (ScreenMode){800,  600};
-    screenModes[2]  = (ScreenMode){1024, 768};
-    screenModes[3]  = (ScreenMode){1152, 864};
-    screenModes[4]  = (ScreenMode){1280, 720};
-    screenModes[5]  = (ScreenMode){1280, 1024};
-    screenModes[6]  = (ScreenMode){1400, 1050};
-    screenModes[7]  = (ScreenMode){1440, 900};
-    screenModes[8]  = (ScreenMode){1680, 1050};
-    screenModes[9]  = (ScreenMode){1920, 1080};
-    screenModes[10] = (ScreenMode){1920, 1200};
+	int num_display_modes = SDL_GetNumDisplayModes(0);
+    if (num_display_modes < 1) {
+        SDL_Log("SDL_GetNumDisplayModes failed: %s", SDL_GetError());
+        return 0;
+    }
 	
-	return 11;
+	int screenModeCount = 0;
+	
+	for (int i = 0; i < num_display_modes; ++i) {
+        SDL_DisplayMode mode;
+        if (SDL_GetDisplayMode(0, i, &mode) != 0)
+            continue;
+
+        // Ignorer les doublons
+        int duplicate = 0;
+        for (int j = 0; j < screenModeCount; ++j) {
+            if (screenModes[j].width == mode.w && screenModes[j].height == mode.h) {
+                duplicate = 1;
+                break;
+            }
+        }
+
+        if (!duplicate && screenModeCount < 64) {
+            screenModes[screenModeCount].width = mode.w;
+            screenModes[screenModeCount].height = mode.h;
+            screenModeCount++;
+        }
+    }
+	
+	for (int i = 1; i < screenModeCount; i++) {
+        ScreenMode key = screenModes[i];
+        int j = i - 1;
+
+        while (j >= 0 && (screenModes[j].width > key.width ||
+             (screenModes[j].width == key.width && screenModes[j].height > key.height))) {
+            screenModes[j + 1] = screenModes[j];
+            j--;
+        }
+        screenModes[j + 1] = key;
+    }
+
+	return screenModeCount;
 }
 
 #ifndef _GAPI_GLES 
