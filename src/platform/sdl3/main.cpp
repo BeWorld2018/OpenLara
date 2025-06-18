@@ -595,12 +595,21 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 	as->window = SDL_CreateWindow(WND_TITLE,
                               SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT,
                               SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	if (!as->window) {	
+		LOG("Can't create Window: %s", SDL_GetError());
+		return SDL_APP_FAILURE;
+	}
 	int w, h;
 	SDL_GetWindowSizeInPixels(as->window, &w, &h);
 	Core::width  = w;
 	Core::height = h;
 
-	as->context = SDL_GL_CreateContext(as->window);	
+	as->context = SDL_GL_CreateContext(as->window);
+	if (!as->context) {
+		
+		LOG("Can't create GL context: %s", SDL_GetError());
+		return SDL_APP_FAILURE;
+	}
 	SDL_HideCursor();
 
     if (!sndInit()) {
